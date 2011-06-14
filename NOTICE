@@ -1,0 +1,12 @@
+    Tommys components for controlling and speeding handling of test data
+    Copyright 2011 Tommy Skodje
+
+This product includes mostly software developed at Antares Gruppen AS (http://www.antares.no)
+
+The project is initially closely tied to the dbUnit project (http://www.dbunit.org), as it is supposed to be a component
+running on top of dbUnit and adding capabilities.
+The author hopes this project is worthy to commit to the dbUnit project eventually, if so license may be changed to LGPL
+
+The XmlStreamer is a ported version of code found at http://www.java2s.com/Code/Java/XML/XmlReaderToWriter.htm
+
+The pom.xml file lists other dependencies that may be of interest if you are into building code yourself.
