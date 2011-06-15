@@ -31,6 +31,7 @@ import org.dbunit.database._
 import org.dbunit.dataset.{CachedDataSet, IDataSet}
 
 import org.xml.sax.InputSource
+import xml.{Node, XML}
 ;
 
 /** Code for in-memory database
@@ -59,7 +60,10 @@ class TstDbDerby {
   } finally {
 	}
 
-	def connect():  Connection	= connect( false );
+  def rollback(): Unit	= connection.rollback()
+
+	def connect(): Connection	= connect( false );
+
 
 	private def connect( create: Boolean ):  Connection	= {
 		var url	= "jdbc:derby:" + dbName;
@@ -85,25 +89,25 @@ class TstDbDerby {
   }
 
   /** partial database export */
-  def extractFlatXml( tablesWithQueries: (String,String)* ): String = {
+  def extractFlatXml( tablesWithQueries: (String,String)* ): Node = {
     val dbuConnection = new DatabaseConnection( connection );
     val partialDataSet = new QueryDataSet(dbuConnection);
     for ( (name, select) <- tablesWithQueries )
       partialDataSet.addTable( name, select );
     val partialResultW: StringWriter = new StringWriter();
     FlatXmlDataSet.write(partialDataSet, partialResultW);
-    partialResultW.toString
+    XML.loadString( partialResultW.toString )
   }
 
   /** full database export - setup for streaming @see http://www.dbunit.org/faq.html#streaming */
-  def stream2FlatXml(): String = {
+  def stream2FlatXml(): Node = {
     val dbuConnection = new DatabaseConnection( connection );
 		val config = dbuConnection.getConfig();
 		config.setProperty( DatabaseConfig.PROPERTY_RESULTSET_TABLE_FACTORY, new ForwardOnlyResultSetTableFactory() );
 		val fullDataSet = dbuConnection.createDataSet();
 		val fullResultW	= new StringWriter();
 		FlatXmlDataSet.write(fullDataSet, fullResultW );
-		fullResultW.toString
+		XML.loadString( fullResultW.toString )
   }
 
   private def loadDatabase( dbDataFile: String ) {

@@ -15,15 +15,14 @@
 */
 package no.antares.dbunit.model
 
-import java.util.Date;
 
 /** Model class that maps to table with some numerical type columns */
 case class TstNumerical(
-    var colWithInt: Int,
-    var colWithFloat: Float,
-    var colWithDate: Date
+    var colWithInt: java.lang.Integer,
+    var colWithFloat: java.lang.Float,
+    var colWithDate: java.util.Date
 ) {
-  def this()	= this( 0, 0, null );	// auxillary constructor
+  def this()	= this( null, null, null );	// auxillary constructor
 }
 
 object TstNumerical {
