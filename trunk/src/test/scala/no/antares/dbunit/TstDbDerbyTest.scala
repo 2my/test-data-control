@@ -15,43 +15,53 @@
 */
 package no.antares.dbunit;
 
-import no.antares.dbunit.model._
 
-import org.junit.{Before, Test}
+import java.lang.Float
+import java.lang.Integer
+import java.util.Date
+
+
 import org.scalatest.junit.AssertionsForJUnit
-
 import org.codehaus.jettison.json.JSONObject
 
-import scala.xml.XML
 import scala.collection.JavaConversions._
+import collection.mutable.ListBuffer
+
+import no.antares.dbunit.model._
 import no.antares.xstream.XStreamUtils
+import java.text.SimpleDateFormat
+import xml.{Node, Elem, XML}
+import org.junit.{After, Before, Test}
 
 class TstDbDerbyTest extends AssertionsForJUnit {
 
-  @Before def initialize() {
-    println( "HELLO WORLD" )
-  }
+  val db	= new TstDbDerby();
 
-  @Test def verifyXml2DB2Xml() {
-    val db	= new TstDbDerby();
+  @After def cleanUp  = db.rollback()
+
+  @Test def verify_extractFlatXml() {
     db.runSqlScript( Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
     val partialResult = db.extractFlatXml( ("credential", "SELECT * FROM credential") )
-		val partialXml	= XML.loadString( partialResult )
-		assert( (expectedXml \\ "@USER_NAME" text)  === (partialXml \\ "@USER_NAME" text) )
-		println( partialXml \\ "@PASS_WORD" text )
 
-		// full database export - setup for streaming @see http://www.dbunit.org/faq.html#streaming
+		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
+		println( partialResult \\ "@PASS_WORD" text )
+  }
+
+  @Test def verify_stream2FlatXml() {
+    db.runSqlScript( Credential.sqlCreateScript );
+    db.refreshWithFlatXml( Credential.flatXmlTestData )
+    val expectedXml = XML.loadString(Credential.flatXmlTestData)
+
 		val fullResult	= db.stream2FlatXml()
-		val fullXml	= XML.loadString( fullResult )
-		assert( (expectedXml \\ "@USER_NAME" text)  === (fullXml \\ "@USER_NAME" text) )
-		println( partialXml \\ "@NAME" text )
+
+		assert( (expectedXml \\ "@USER_NAME" text)  === (fullResult \\ "@USER_NAME" text) )
+		println( fullResult \\ "@NAME" text )
   }
 
   @Test def testJsonToDB_simple() {
-    val db	= new TstDbDerby();
     db.runSqlScript( TstString.sqlCreateScript );
     db.refreshWithFlatJSON( TstString.jsonTestData )
 
@@ -60,33 +70,46 @@ class TstDbDerbyTest extends AssertionsForJUnit {
     println( expected )
 
     val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
-		val xml	= XML.loadString( result )
-		assert( expected  === (xml \\ "@COL_WITH_STRING" text) )
+		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
 	}
 
   @Test def testJsonToDB_variants() {
-    val db	= new TstDbDerby();
     db.runSqlScript( TstNumerical.sqlCreateScript );
+
     db.refreshWithFlatJSON( TstNumerical.jsonTestData )
 
-    /* May need to use members, not properties: Could not access no.antares.dbunit.model.TstNumerical$.colWithInt field: colWithInt
-    val util  = new XStreamUtils();
-    util.alias( "dataset", List.getClass ).alias( "tstNumericals", TstNumerical.getClass )
-    util.aliasField( TstNumerical.getClass, "colWithInt", "colWithInt" )
-    util.aliasField( TstNumerical.getClass, "colWithFloat", "colWithFloat" )
-    val expected  = util.fromJson( TstNumerical.jsonTestData )
-    println( expected )
-    */
-
-    val result = db.extractFlatXml( ("tstNumericals", "SELECT * FROM TST_NUMERICALS") )
-    println( result )
-    val xml	= XML.loadString( result )
-    // TODO assert( expected  === (xml \\ "@COL_WITH_STRING" text) )
+    val resultX = db.extractFlatXml( ("tstNumericals", "SELECT * FROM TST_NUMERICALS") )
+    val resultL  = xmlElements( resultX, "tstNumericals" ).map( elem => parseTstNumerical( elem ) )
+    assert( resultL(0) == (new TstNumerical( 456, null, null )) )
+    assert( resultL(1) == (new TstNumerical( 789, 3.141592658f, null )) )
+    assert( resultL(2) == (new TstNumerical( -3, null, toDate( "2004-09-30" ) )) )
+    assert( resultL(3) == (new TstNumerical( 123, -2f, toDate( "2114-12-24" ) )) )
 	}
 
+  def xmlElements( nodes: Node, elementName: String ): List[Elem] = {
+    val buf = new ListBuffer[Elem]
+    ( nodes \\ elementName ).foreach( node => buf.append( node.asInstanceOf[Elem] ) )
+    buf.toList
+  }
+
+  def parseTstString( row: Elem ): TstString = new TstString( (row \\ "@COL_WITH_STRING" ).text )
+
+  def parseTstNumerical( row: Elem ): TstNumerical = {
+    val i = (row \\ "@COL_WITH_INT" ).text
+    val f = ( row \\ "@COL_WITH_FLOAT" ).text
+    val d = ( row \\ "@COL_WITH_DATE" ).text
+    new TstNumerical( toInt( i ), toFloat( f ), toDate( d ) );
+  }
+
   def parseTstNumerical( jsonO: JSONObject ): TstNumerical = {
-    val date  = new java.util.Date()	// jsonO.getString( "colWithDate" )
+    val date  = new Date()	// jsonO.getString( "colWithDate" )
     val fpnum	= jsonO.getDouble( "colWithFloat" ).asInstanceOf[Float]
     new TstNumerical( jsonO.getInt( "colWithInt" ), fpnum, date );
   }
+
+  val dateparser  = new SimpleDateFormat("yyyy-MM-dd")
+  def toDate( value: String ): Date = if ( value.isEmpty ) null else dateparser.parse("2008-05-06 13:29")
+  def toInt( value: String ): java.lang.Integer = if ( value.isEmpty ) null else value.toInt
+  def toFloat( value: String ): java.lang.Float = if ( value.isEmpty ) null else value.toFloat
+
 }
