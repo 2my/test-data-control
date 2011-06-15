@@ -84,4 +84,9 @@ class TstDbDerbyTest extends AssertionsForJUnit {
     // TODO assert( expected  === (xml \\ "@COL_WITH_STRING" text) )
 	}
 
+  def parseTstNumerical( jsonO: JSONObject ): TstNumerical = {
+    val date  = new java.util.Date()	// jsonO.getString( "colWithDate" )
+    val fpnum	= jsonO.getDouble( "colWithFloat" ).asInstanceOf[Float]
+    new TstNumerical( jsonO.getInt( "colWithInt" ), fpnum, date );
+  }
 }
