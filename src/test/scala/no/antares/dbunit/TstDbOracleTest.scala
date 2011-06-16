@@ -1,4 +1,4 @@
-/* TstDbDerbyTest.scala
+/* TstDbOracleTest.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,16 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package no.antares.dbunit;
+package no.antares.dbunit
 
-class TstDbDerbyTest extends AbstractDBTest {
-  val db	= new TstDbDerby();
+import model.TstString
+import org.junit.{Test, After}
+import org.codehaus.jettison.json.JSONObject
+
+/** @author Tommy Skodje */
+
+class TstDbOracleTest extends AbstractDBTest {
+
+  val db	= new TstDbOracle();
 
 }
