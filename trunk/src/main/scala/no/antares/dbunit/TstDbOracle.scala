@@ -1,4 +1,4 @@
-/* TstDbDerby.scala
+/* TstDbOracle.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,24 +15,17 @@
 */
 package no.antares.dbunit
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.Properties;
-import java.io._
-
-import org.apache.derby.tools.ij;
-
-import org.dbunit.operation.DatabaseOperation;
-import org.dbunit.util.fileloader.FlatXmlDataFileLoader
-import org.dbunit.database._
-
 import org.slf4j.{LoggerFactory, Logger}
+import java.util.Properties
+import java.io.{OutputStream, InputStream}
+import org.apache.derby.tools.ij
+import java.sql.{DriverManager, Connection}
+import org.dbunit.util.fileloader.FlatXmlDataFileLoader
+import org.dbunit.database.DatabaseConnection
+import org.dbunit.operation.DatabaseOperation
 
-/** Implements AbstractDB for Derby (In-memory database)
- *
- * @author Tommy Skodje
- */
-class TstDbDerby extends AbstractDB {
+/** @author Tommy Skodje */
+class TstDbOracle extends AbstractDB {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
 
