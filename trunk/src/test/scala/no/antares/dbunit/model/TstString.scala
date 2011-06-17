@@ -23,8 +23,8 @@ case class TstString(
 }
 
 object TstString {
-	def sqlCreateScript	= """drop table tst_strings;
-create table tst_strings (
+  def sqlDropScript	= "drop table tst_strings"
+	def sqlCreateScript	= """create table tst_strings (
 	COL_WITH_STRING varchar(255) PRIMARY KEY
 );
 """;
