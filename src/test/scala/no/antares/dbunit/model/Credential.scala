@@ -59,8 +59,8 @@ case class Credential {
 }
 
 object Credential {
-	def sqlCreateScript	= """drop table credential;
-create table credential (
+  def sqlDropScript	= "drop table credentialz;"
+	def sqlCreateScript	= """create table credentialz (
 	user_name varchar (30) PRIMARY KEY, 
 	pass_word varchar (30), 
 	name varchar (60), 
@@ -79,7 +79,7 @@ create table credential (
 
   def flatXmlTestData	= """<?xml version='1.0' encoding='UTF-8'?>
 <dataset>
-  <CREDENTIAL
+  <CREDENTIALZ
    USER_NAME="TestUser1"
    PASS_WORD="TestPwd1"
    NAME="Test User One"
@@ -94,7 +94,7 @@ create table credential (
 
   def jsonTestData	= """{
 	"dataset": {
-		"CREDENTIAL": [{
+		"CREDENTIALZ": [{
 			"USER_NAME": "TestUser1",
 			"PASS_WORD": "TestPwd1",
 			"NAME": "Test User One",

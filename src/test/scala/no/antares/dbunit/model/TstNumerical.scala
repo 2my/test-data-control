@@ -26,8 +26,8 @@ case class TstNumerical(
 }
 
 object TstNumerical {
-	def sqlCreateScript	= """drop table tst_numericals;
-  create table tst_numericals (
+  def sqlDropScript	= "drop table tst_numericals"
+	def sqlCreateScript	= """create table tst_numericals (
     COL_WITH_INT integer PRIMARY KEY,
     COL_WITH_FLOAT float,
     COL_WITH_DATE date

@@ -27,7 +27,7 @@ import collection.mutable.ListBuffer
 import no.antares.dbunit.model._
 import java.text.SimpleDateFormat
 import xml.{Node, Elem, XML}
-import org.junit.{After, Test}
+import org.junit.{BeforeClass, After, Test}
 
 /** @author Tommy Skodje */
 abstract class AbstractDBTest extends AssertionsForJUnit {
@@ -37,18 +37,18 @@ abstract class AbstractDBTest extends AssertionsForJUnit {
   @After def cleanUp  = db.rollback()
 
   @Test def verify_extractFlatXml() {
-    db.runSqlScript( Credential.sqlCreateScript );
+    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
-    val partialResult = db.extractFlatXml( ("credential", "SELECT * FROM credential") )
+    val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
 
 		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
 		println( partialResult \\ "@PASS_WORD" text )
   }
 
   @Test def verify_stream2FlatXml() {
-    db.runSqlScript( Credential.sqlCreateScript );
+    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
@@ -59,7 +59,7 @@ abstract class AbstractDBTest extends AssertionsForJUnit {
   }
 
   @Test def testJsonToDB_simple() {
-    db.runSqlScript( TstString.sqlCreateScript );
+    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
     db.refreshWithFlatJSON( TstString.jsonTestData )
 
     val json	= new JSONObject( TstString.jsonTestData )
@@ -71,7 +71,7 @@ abstract class AbstractDBTest extends AssertionsForJUnit {
 	}
 
   @Test def testJsonToDB_variants() {
-    db.runSqlScript( TstNumerical.sqlCreateScript );
+    db.runSqlScripts( TstNumerical.sqlDropScript, TstNumerical.sqlCreateScript );
 
     db.refreshWithFlatJSON( TstNumerical.jsonTestData )
 
