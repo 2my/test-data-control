@@ -1,4 +1,4 @@
-/* TstDbOracleTest.scala
+/* DbProperties.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,14 @@
 */
 package no.antares.dbunit
 
-import no.antares.dbunit.AbstractDB
-
-/** @author Tommy Skodje */
-class TstDbOracleTest extends AbstractDBTest {
-
-  // FixMe: should not publish our database connection
-  class TstDbOracle extends AbstractDB( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" ){}
-  val db	= new TstDbOracle();
-
-  // fails with heap space on our db
-  override def verify_stream2FlatXml(): Unit = {}
-
+/** Simple wrapper for Database connection properties.
+@author Tommy Skodje
+*/
+class DbProperties(
+  val driver: String,
+  val dbUrl: String,
+  val username: String,
+  val password: String,
+  val schema: String
+) {
 }
