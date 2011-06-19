@@ -1,4 +1,4 @@
-/* AbstractDBTest.scala
+/* DbWrapperTest.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,12 +27,48 @@ import collection.mutable.ListBuffer
 import no.antares.dbunit.model._
 import java.text.SimpleDateFormat
 import xml.{Node, Elem, XML}
-import org.junit.{BeforeClass, After, Test}
+import org.junit.{After, Test}
+import org.slf4j.{LoggerFactory, Logger}
+import java.io.{OutputStream, InputStream}
+import org.apache.derby.tools.ij
+import no.antares.utils.TstContext
+
+/** Test with in-memory DB, default.
+@author Tommy Skodje */
+class TstDbDerbyTest extends DbWrapperTest {
+  val properties  = new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" );
+  val db	= new TstDbDerby( properties );
+}
+
+/* FixMe: use shared test as in: http://www.scalatest.org/scaladoc-1.6.1/#org.scalatest.FunSuite
+@author Tommy Skodje
+class TstDbOracleTest extends DbWrapperTest {
+  // should not publish our database connection - get it from xml property file
+  val context  = new TstContext( "test-context-local.xml" )
+  val db	= context.dataSourceOracle() match {
+    case Some( properties ) => new TstDbOracle( properties );
+    case None => null
+  }
+
+  // fails with heap space on our db
+  override def verify_stream2FlatXml(): Unit = {}
+
+}
+class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
+ */
+class TstDbDerby( properties: DbProperties ) extends DbWrapper( properties ) {
+  private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
+  override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
+    val result = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
+    logger.debug( "ij.runScript, result code is: " + result );
+    return (result==0);
+  }
+}
 
 /** @author Tommy Skodje */
-abstract class AbstractDBTest extends AssertionsForJUnit {
+abstract class DbWrapperTest extends AssertionsForJUnit {
 
-  val db: AbstractDB;
+  val db: DbWrapper;
 
   @After def cleanUp  = db.rollback()
 

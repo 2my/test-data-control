@@ -1,4 +1,4 @@
-/* AbstractDB.scala
+/* DbWrapper.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,23 +34,17 @@ import org.apache.tools.ant.Project
 /** Common Code for database
  * @author Tommy Skodje
 */
-abstract class AbstractDB(
-  val driver: String,
-  val dbUrl: String,
-  val username: String,
-  val password: String,
-  val schema: String
-) {
+abstract class DbWrapper( val properties: DbProperties ) {
 
-  private final val logger: Logger = LoggerFactory.getLogger( classOf[AbstractDB] )
+  private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
 
-  loadDriver( driver );
+  loadDriver( properties.driver );
   protected val dbConnection: Connection	= connect()
 
   protected def connection(): Connection	= dbConnection;
 
   def getDbUnitConnection(): DatabaseConnection = {
-    val dbuConnection = new DatabaseConnection( connection, schema );
+    val dbuConnection = new DatabaseConnection( connection, properties.schema );
     val config = dbuConnection.getConfig();
     // config.setProperty( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, true )
     config.setProperty( DatabaseConfig.FEATURE_SKIP_ORACLE_RECYCLEBIN_TABLES, true )
@@ -59,22 +53,14 @@ abstract class AbstractDB(
   }
 
   protected def connect(): Connection	= {
-    val connectionUrl = dbUrl;
+    val connectionUrl = properties.dbUrl;
     val connectionProperties = new Properties();
-    connectionProperties.put("user", schema);
-    connectionProperties.put("username", username);
-    connectionProperties.put("password", password);
+    connectionProperties.put( "user", properties.schema );
+    connectionProperties.put( "username", properties.username );
+    connectionProperties.put( "password", properties.password );
 
     DriverManager.getConnection( connectionUrl, connectionProperties )
   }
-
-  /** Bundles stream with encoding, default to UTF-8 */
-  class Encoded[T]( val stream: T, val encoding: String ) {
-    def this( stream: T ) = this( stream, "UTF-8" )
-  }
-  /** Bundles stream with default encoding */
-  implicit def stream2encoded( stream: InputStream ): Encoded[ InputStream ] = new Encoded[ InputStream ]( stream )
-  implicit def stream2encoded( stream: OutputStream ): Encoded[ OutputStream ] = new Encoded[ OutputStream ]( stream )
 
   /**  */
   def rollback(): Unit	= connection.rollback()
@@ -176,13 +162,21 @@ abstract class AbstractDB(
       executer.setTaskName("sql");
 
       // executer.setSrc(new File(sqlFilePath));
-      executer.setDriver( driver );
-      executer.setPassword( password );
-      executer.setUserid( username );
-      executer.setUrl( dbUrl );
+      executer.setDriver( properties.driver );
+      executer.setPassword( properties.password );
+      executer.setUserid( properties.username );
+      executer.setUrl( properties.dbUrl );
       executer.addText( script )
       executer.execute();
   }
+
+  /** Bundles stream with encoding, default to UTF-8 */
+  class Encoded[T]( val stream: T, val encoding: String ) {
+    def this( stream: T ) = this( stream, "UTF-8" )
+  }
+  /** Bundles stream with default encoding */
+  implicit def stream2encoded( stream: InputStream ): Encoded[ InputStream ] = new Encoded[ InputStream ]( stream )
+  implicit def stream2encoded( stream: OutputStream ): Encoded[ OutputStream ] = new Encoded[ OutputStream ]( stream )
 
   def catchall( f : () => Unit ): Unit = {
     try {
