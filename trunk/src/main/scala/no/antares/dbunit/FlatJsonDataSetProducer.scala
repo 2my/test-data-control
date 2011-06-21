@@ -28,6 +28,9 @@ import org.dbunit.dataset.xml._
 
 import org.codehaus.jettison.json.{JSONArray, JSONObject}
 
+import no.antares.util.NameValuePair
+
+
 /** Produces a dbUnit dataset from json, mirrors dbUnit FlatXmlProducer.
 
 I chose to reimplement most of FlatXmlProducer here
@@ -48,6 +51,10 @@ class FlatJsonDataSetProducer(
   private var consumer: IDataSetConsumer = new DefaultConsumer  // responsible for creating the datasets and tables
   private var _orderedTableNameMap: OrderedTableNameMap = null  // also holds the currently active {@link ITableMetaData}
 
+  var convertCamelNames = false;
+  // TODO: should move conversion to json parsing
+  def setConvertCamelNames( doConvert: Boolean ): Unit = convertCamelNames  = doConvert
+
   private def isNewTable(tableName: String): Boolean = { ! _orderedTableNameMap.isLastTable(tableName) }
 
 
@@ -65,9 +72,11 @@ class FlatJsonDataSetProducer(
   def setConsumer( consumerIn: IDataSetConsumer): Unit = {
     logger.debug("setConsumer( consumerIn )")
     if ( columnSensing )
-      consumer = new CamelNameConverterConsumer( new BufferedConsumer( consumerIn ) )
+      consumer = new BufferedConsumer( consumerIn )
     else
-      consumer = new CamelNameConverterConsumer( consumerIn )
+      consumer = consumerIn
+    if ( convertCamelNames )
+      consumer = new CamelNameConverterConsumer( consumer )
   }
 
   /** IDataSetProducer interface */
@@ -181,4 +190,3 @@ class FlatJsonDataSetProducer(
 
 }
 
-private class NameValuePair( val name: String, val value: AnyRef )

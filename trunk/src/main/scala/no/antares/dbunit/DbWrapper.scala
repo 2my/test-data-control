@@ -16,7 +16,6 @@
 package no.antares.dbunit
 
 import org.slf4j.{LoggerFactory, Logger}
-import org.codehaus.jettison.json.JSONObject
 import org.dbunit.dataset.CachedDataSet
 import org.dbunit.operation.DatabaseOperation
 import org.xml.sax.InputSource
@@ -30,6 +29,9 @@ import java.sql.{DriverManager, Connection}
 import org.apache.commons.io.IOUtils
 import org.apache.tools.ant.taskdefs.SQLExec
 import org.apache.tools.ant.Project
+import org.codehaus.jettison.json.JSONObject
+import io.{BufferedSource, Source}
+import no.antares.util.FileUtil
 
 /** Common Code for database
  * @author Tommy Skodje
@@ -66,10 +68,18 @@ abstract class DbWrapper( val properties: DbProperties ) {
   def rollback(): Unit	= connection.rollback()
 
   /**  */
-  def refreshWithFlatJSON( jsonS: String ): Unit = {
+  def refreshWithFlatJSON( jsonS: String, convertCamelNames: Boolean ): Unit = {
     val json	= new JSONObject( jsonS )
-    val dataSet = new CachedDataSet( new FlatJsonDataSetProducer( json ) )
+    val producer  = new FlatJsonDataSetProducer( json )
+    producer.setConvertCamelNames( convertCamelNames )
+    val dataSet = new CachedDataSet( producer )
     DatabaseOperation.REFRESH.execute( getDbUnitConnection(), dataSet );
+  }
+
+  /**  */
+  def refreshWithFlatJSON( json: File, convertCamelNames: Boolean ): Unit = {
+    val lines = scala.io.Source.fromFile( json ).mkString
+    refreshWithFlatJSON( lines, convertCamelNames );
   }
 
   /**  */

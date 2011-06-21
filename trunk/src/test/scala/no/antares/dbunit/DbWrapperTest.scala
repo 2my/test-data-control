@@ -30,17 +30,58 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import org.slf4j.{LoggerFactory, Logger}
-import java.io.{OutputStream, InputStream}
 import org.apache.derby.tools.ij
 import no.antares.utils.TstContext
 import java.util.{ArrayList, Date}
+import java.io.{File, OutputStream, InputStream}
+import no.antares.util.FileUtil
 
 
 /** @author Tommy Skodje */
-@RunWith(classOf[Parameterized])
-class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
+// @RunWith(classOf[Parameterized])
+// class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
+class DbWrapperTest() extends AssertionsForJUnit {
+  val db: DbWrapper  = new TstDbDerby()
 
   @After def cleanUp  = db.rollback()
+
+  @Test def testJsonToDB_simple() {
+    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
+    db.refreshWithFlatJSON( TstString.jsonTestData, true )
+
+    val json	= new JSONObject( TstString.jsonTestData )
+    val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
+    println( expected )
+
+    val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
+		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
+	}
+
+  @Test def testJsonToDB_variants() {
+    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
+    db.refreshWithFlatJSON( TstString.jsonTestData, true )
+
+    val json	= new JSONObject( TstString.jsonTestData )
+    val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
+    println( expected )
+
+    val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
+		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
+	}
+
+  @Test def testJsonToDB_file() {
+    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+
+    val f = FileUtil.getFromClassPath( "credentialz.json" )
+    db.refreshWithFlatJSON( f, false )
+
+    val expectedXml = XML.loadString(Credential.flatXmlTestData)
+
+    val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
+
+		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
+		println( partialResult \\ "@PASS_WORD" text )
+	}
 
   @Test def verify_extractFlatXml() {
     db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
@@ -63,31 +104,6 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 		assert( (expectedXml \\ "@USER_NAME" text)  === (fullResult \\ "@USER_NAME" text) )
 		println( fullResult \\ "@NAME" text )
   }
-
-  @Test def testJsonToDB_simple() {
-    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
-    db.refreshWithFlatJSON( TstString.jsonTestData )
-
-    val json	= new JSONObject( TstString.jsonTestData )
-    val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
-    println( expected )
-
-    val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
-		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
-	}
-
-  @Test def testJsonToDB_variants() {
-    db.runSqlScripts( TstNumerical.sqlDropScript, TstNumerical.sqlCreateScript );
-
-    db.refreshWithFlatJSON( TstNumerical.jsonTestData )
-
-    val resultX = db.extractFlatXml( ("tstNumericals", "SELECT * FROM TST_NUMERICALS") )
-    val resultL  = xmlElements( resultX, "tstNumericals" ).map( elem => parseTstNumerical( elem ) )
-    assert( resultL(0) == (new TstNumerical( 456, null, null )) )
-    assert( resultL(1) == (new TstNumerical( 789, 3.141592658f, null )) )
-    assert( resultL(2) == (new TstNumerical( -3, null, toDate( "2004-09-30" ) )) )
-    assert( resultL(3) == (new TstNumerical( 123, -2f, toDate( "2114-12-24" ) )) )
-	}
 
   def xmlElements( nodes: Node, elementName: String ): List[Elem] = {
     val buf = new ListBuffer[Elem]
@@ -125,9 +141,7 @@ object DbWrapperTest {
     val configurations	= new ArrayList[ Array[Object] ]
 
     // Test with in-memory DB, default.
-    val dProps  = new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" );
-    val derby	= new TstDbDerby( dProps )
-    configurations.add( Array( derby ) )
+    configurations.add( Array( new TstDbDerby() ) )
 
     // should not publish our database connection - get it from xml property file
     val context  = new TstContext( "test-context-local.xml" )
@@ -142,7 +156,7 @@ object DbWrapperTest {
 
 private class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
 
-private class TstDbDerby( properties: DbProperties ) extends DbWrapper( properties ) {
+private class TstDbDerby extends DbWrapper( new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" ) ) {
   private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
   override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
     val result = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
