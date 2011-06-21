@@ -16,9 +16,6 @@
 package no.antares.dbunit
 
 import java.lang.Float
-import java.util.Date
-
-
 import org.scalatest.junit.AssertionsForJUnit
 import org.codehaus.jettison.json.JSONObject
 
@@ -28,47 +25,20 @@ import no.antares.dbunit.model._
 import java.text.SimpleDateFormat
 import xml.{Node, Elem, XML}
 import org.junit.{After, Test}
+import org.junit.runners.Parameterized
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 import org.slf4j.{LoggerFactory, Logger}
 import java.io.{OutputStream, InputStream}
 import org.apache.derby.tools.ij
 import no.antares.utils.TstContext
+import java.util.{ArrayList, Date}
 
-/** Test with in-memory DB, default.
-@author Tommy Skodje */
-class TstDbDerbyTest extends DbWrapperTest {
-  val properties  = new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" );
-  val db	= new TstDbDerby( properties );
-}
-
-/* FixMe: use shared test as in: http://www.scalatest.org/scaladoc-1.6.1/#org.scalatest.FunSuite
-@author Tommy Skodje
-class TstDbOracleTest extends DbWrapperTest {
-  // should not publish our database connection - get it from xml property file
-  val context  = new TstContext( "test-context-local.xml" )
-  val db	= context.dataSourceOracle() match {
-    case Some( properties ) => new TstDbOracle( properties );
-    case None => null
-  }
-
-  // fails with heap space on our db
-  override def verify_stream2FlatXml(): Unit = {}
-
-}
-class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
- */
-class TstDbDerby( properties: DbProperties ) extends DbWrapper( properties ) {
-  private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
-  override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
-    val result = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
-    logger.debug( "ij.runScript, result code is: " + result );
-    return (result==0);
-  }
-}
 
 /** @author Tommy Skodje */
-abstract class DbWrapperTest extends AssertionsForJUnit {
-
-  val db: DbWrapper;
+@RunWith(classOf[Parameterized])
+class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @After def cleanUp  = db.rollback()
 
@@ -145,4 +115,38 @@ abstract class DbWrapperTest extends AssertionsForJUnit {
   def toInt( value: String ): java.lang.Integer = if ( value.isEmpty ) null else value.toInt
   def toFloat( value: String ): java.lang.Float = if ( value.isEmpty ) null else value.toFloat
 
+}
+
+// TODO: use FunSuite http://www.scalatest.org/scaladoc-1.6.1/#org.scalatest.FunSuite
+// see: http://jpz-log.info/archives/2009/09/29/scalatest-in-maven/
+object DbWrapperTest {
+  @Parameters
+  def configurationsPresent(): ArrayList[ Array[Object] ] = {
+    val configurations	= new ArrayList[ Array[Object] ]
+
+    // Test with in-memory DB, default.
+    val dProps  = new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" );
+    val derby	= new TstDbDerby( dProps )
+    configurations.add( Array( derby ) )
+
+    // should not publish our database connection - get it from xml property file
+    val context  = new TstContext( "test-context-local.xml" )
+    context.dataSourceOracle() match {
+      case Some( properties ) => configurations.add( Array( new TstDbOracle( properties ) ) );
+      case _ => ;
+    }
+
+    return configurations
+  }
+}
+
+private class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
+
+private class TstDbDerby( properties: DbProperties ) extends DbWrapper( properties ) {
+  private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
+  override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
+    val result = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
+    logger.debug( "ij.runScript, result code is: " + result );
+    return (result==0);
+  }
 }
