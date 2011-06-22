@@ -69,7 +69,7 @@ class DbWrapper( val properties: DbProperties ) {
 
   /**  */
   def refreshWithFlatJSON( jsonS: String, convertCamelNames: Boolean ): Unit = {
-    val json	= new JSONObject( jsonS )
+    val json	= new JsonDataSet( jsonS )
     val producer  = new FlatJsonDataSetProducer( json )
     producer.setConvertCamelNames( convertCamelNames )
     val dataSet = new CachedDataSet( producer )
