@@ -56,7 +56,42 @@
 
 	<build>
 		<plugins>
-			<plugin>
+            <!--
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <configuration>
+                            <target name="main">
+                                <taskdef name="mytask" classname="no.antares.dbunit.JsonDbUnitAntTask" >
+                                    <classpath refid="maven.compile.classpath" />
+                                </taskdef>
+                                <mytask message="Hello World! Greeetings from JsonDbUnitAntTask!"/>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>no.antares</groupId>
+                <artifactId>test.data-control-plugin</artifactId>
+                <version>0.5-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>sayhi</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+            <plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
