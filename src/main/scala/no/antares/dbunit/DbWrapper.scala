@@ -36,7 +36,7 @@ import no.antares.util.FileUtil
 /** Common Code for database
  * @author Tommy Skodje
 */
-abstract class DbWrapper( val properties: DbProperties ) {
+class DbWrapper( val properties: DbProperties ) {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
 
