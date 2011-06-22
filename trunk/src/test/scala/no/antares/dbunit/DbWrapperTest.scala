@@ -38,10 +38,10 @@ import no.antares.util.FileUtil
 
 
 /** @author Tommy Skodje */
-// @RunWith(classOf[Parameterized])
-// class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
-class DbWrapperTest() extends AssertionsForJUnit {
-  val db: DbWrapper  = new TstDbDerby()
+@RunWith(classOf[Parameterized])
+class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
+// class DbWrapperTest() extends AssertionsForJUnit {
+//  val db: DbWrapper  = new TstDbDerby()
 
   @After def cleanUp  = db.rollback()
 
