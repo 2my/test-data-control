@@ -39,15 +39,14 @@ org.springframework.util.xml.StaxStreamXMLReader converts from XmlStreamReader t
 
 */
 class FlatJsonDataSetProducer(
-  val json: JSONObject,
+  val json: JsonDataSet,
   var columnSensing: Boolean,    // dynamically recognize new columns during the parse process.
   var caseSensitiveTableNames: Boolean
 ) extends IDataSetProducer {
 
-  private final val logger: Logger = LoggerFactory.getLogger(classOf[FlatXmlProducer])
+  def this( json: JsonDataSet ) =  this( json, true, false )
 
-  private var metaDataSet: IDataSet = null  // metadata for the tables, can be null
-
+  private val logger: Logger = LoggerFactory.getLogger(classOf[FlatXmlProducer])
   private var consumer: IDataSetConsumer = new DefaultConsumer  // responsible for creating the datasets and tables
   private var _orderedTableNameMap: OrderedTableNameMap = null  // also holds the currently active {@link ITableMetaData}
 
@@ -56,16 +55,6 @@ class FlatJsonDataSetProducer(
   def setConvertCamelNames( doConvert: Boolean ): Unit = convertCamelNames  = doConvert
 
   private def isNewTable(tableName: String): Boolean = { ! _orderedTableNameMap.isLastTable(tableName) }
-
-
-  def this(json: JSONObject, metaDataSetIn: IDataSet) {
-    this( json, false, metaDataSetIn.isCaseSensitiveTableNames )
-    metaDataSet = metaDataSetIn
-  }
-
-  def this(json: JSONObject, columnSensing: Boolean) = this( json, columnSensing, false )
-
-  def this( json: JSONObject ) =  this( json, true, false )
 
   /********************************************************************************/
   /** IDataSetProducer interface */
@@ -83,110 +72,48 @@ class FlatJsonDataSetProducer(
   def produce: Unit = {
     // iterate json and call IDataSetConsumer functions
     logger.debug( "produce from " + json.toString( 2 ) )
-    val dataset  = json.getJSONObject( "dataset" );
     consumer.startDataSet()
     _orderedTableNameMap = new OrderedTableNameMap( caseSensitiveTableNames )
 
-    dataset.keys().foreach( key => produceTable( key.toString, dataset.getJSONArray( key.toString ) ) )
+    json.tables.foreach( produceTable( _ ) )
     consumer.endDataSet()
   }
 
-  private def produceTable( name: String, rows: JSONArray ): Unit = {
+  private def produceTable( table: TableInDataSet ): Unit = {
     // [{ "colWithString":"1DEMOPARTNERK", "colWithInt":1, "colWithWhatever":null }, ...]
-    logger.debug( "produceTable: " + name + "\n" + rows )
+    logger.debug( "produceTable: " + table.name )
 
-    if ( isNewTable( name ) ) {
-      if ( _orderedTableNameMap.containsTable( name ) ) {
-        _orderedTableNameMap.setLastTable( name )
-      } else {
-        val activeMetaData = createTableMetaData( name, Nil )
-        _orderedTableNameMap.add(activeMetaData.getTableName, activeMetaData)
-      }
+    if ( isNewTable( table.name ) ) {
+      if ( _orderedTableNameMap.containsTable( table.name ) )
+        _orderedTableNameMap.setLastTable( table.name )
+      else
+        _orderedTableNameMap.add(table.name, createTableMetaData( table ) )
     }
 
-    val rowz  = produceRows( name, toList( rows ) )
-
-    consumer.startTable( getActiveMetaData )
-    for ( row <- rowz ) {
-      consumer.row( alignRow2MetaData( row, getActiveMetaData ) )
-    }
+    consumer.startTable( table.metaData )
+    table.rows().foreach( row => consumer.row( row.align2MetaData() ) )
     consumer.endTable()
   }
 
-  private def toList( rows: JSONArray ): List[ JSONObject ] = {
-    val rowz  = new ListBuffer[ JSONObject ]
-    for ( i <- 0.until( rows.length ) )
-      rowz.append( rows.getJSONObject( i ) )
-    rowz.toList
+  def createTableMetaData( table: TableInDataSet ): ITableMetaData = table.metaData
+
+
+/*
+  def this(json: JsonDataSet, metaDataSetIn: IDataSet) {
+    this( json, false, metaDataSetIn.isCaseSensitiveTableNames )
+    metaDataSet = metaDataSetIn
   }
 
-  private def produceRows( tableName: String, rows: List[ JSONObject ] ): List[ ListBuffer[ NameValuePair ] ] = {
-    if ( rows.isEmpty )
-      return Nil;
-    val row = produceRow( tableName, rows.head )
-    row::produceRows( tableName, rows.tail )
-  }
+  def this(json: JsonDataSet, columnSensing: Boolean) = this( json, columnSensing, false )
 
-  private def produceRow( tableName: String, row: JSONObject ): ListBuffer[ NameValuePair ] = {
-    println( "produceRow: " + row )
-
-    val res = new ListBuffer[NameValuePair]
-    row.keys().foreach( key => {
-      val name  = key.toString
-      res.append( new NameValuePair( name, row.get( name ) ) )
-      val updates = findNewColumns(name, getActiveMetaData)
-      updates.foreach( newMetaData => _orderedTableNameMap.update(newMetaData.getTableName, newMetaData) )
-    } )
-
-    res
-  }
-
-  private def findNewColumns(name: String, metaData: ITableMetaData): Option[ITableMetaData] = {
-    try {
-      metaData.getColumnIndex( name )
-      return None
-    } catch {
-      case e: NoSuchColumnException => {
-        // FixMe: logger.debug("Column sensing enabled. Will create a new metaData with potentially new columns if needed")
-        val nCols = metaData.getColumns.length
-        val columns = new Array[Column](nCols + 1)
-        for (i <- 0.until(nCols))
-          columns(i) = metaData.getColumns.apply(i)
-        columns(nCols) = new Column(name, DataType.UNKNOWN)
-        return Some( new DefaultTableMetaData(metaData.getTableName, columns) )
-      }
-    }
-  }
-
-
-  private def createTableMetaData(tableName: String, row: List[NameValuePair] ): ITableMetaData = {
-    if (logger.isDebugEnabled)
-      logger.debug("createTableMetaData(tableName={}, row={}) - start", tableName, row )
+  private var metaDataSet: IDataSet = null  // metadata for the tables, can be null
+  def createTableMetaData( table: TableInDataSet ): ITableMetaData = {
     if ( metaDataSet != null )
-      return metaDataSet.getTableMetaData(tableName)
-
-    var columns = row.map( column => new Column( column.name, DataType.UNKNOWN ) )
-    return new DefaultTableMetaData(tableName, columns.toArray[ Column ] )
+      metaDataSet.getTableMetaData( table.name )
+    else
+      table.metaData
   }
-
-  /** @return The currently active table metadata or <code>null</code> if no active metadata exists. */
-  private def getActiveMetaData: ITableMetaData = {
-    if (_orderedTableNameMap == null)
-      return null
-    val lastTableName: String = _orderedTableNameMap.getLastTableName
-    if (lastTableName == null)
-      return null
-    return _orderedTableNameMap.get(lastTableName).asInstanceOf[ITableMetaData]
-  }
-
-  private def alignRow2MetaData( rowIn: ListBuffer[NameValuePair], metaData: ITableMetaData ): Array[Object] = {
-    val nCols = metaData.getColumns.length
-    val rowOut  = new ArrayList[Object]()
-    for ( i <- 0.until( nCols ) )
-      rowOut.add( null )
-    rowIn.foreach( pair => { rowOut( metaData.getColumnIndex( pair.name ) )  = pair.value } )
-    rowOut.toArray
-  }
+*/
 
 }
 

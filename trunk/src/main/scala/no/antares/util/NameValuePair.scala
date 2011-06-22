@@ -17,4 +17,4 @@ package no.antares.util
 
 /** @author tommyskodje */
 
-class NameValuePair( val name: String, val value: AnyRef )
+class NameValuePair[T]( val name: String, val value: T )
