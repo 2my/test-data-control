@@ -29,7 +29,7 @@ private class CamelNameConverterConsumer( val wrappedConsumer: IDataSetConsumer 
   def endDataSet: Unit    = wrappedConsumer.endDataSet();
 
   def startTable(metaData: ITableMetaData): Unit  = {
-    wrappedConsumer.startTable( new CamelNameConverter( metaData ) )
+    wrappedConsumer.startTable( new MetaDataConverter( metaData ) )
   }
 
   def endTable: Unit  = wrappedConsumer.endDataSet();
@@ -37,7 +37,7 @@ private class CamelNameConverterConsumer( val wrappedConsumer: IDataSetConsumer 
   def row(values: Array[AnyRef]): Unit  = wrappedConsumer.row( values );
 }
 
-private class CamelNameConverter( val wrapped: ITableMetaData ) extends ITableMetaData {
+private class MetaDataConverter( val wrapped: ITableMetaData ) extends ITableMetaData {
   private val tableName = camel2underscored( wrapped.getTableName );
   private val columns  = camel2underscored( wrapped.getColumns );
   private val pks  = camel2underscored( wrapped.getPrimaryKeys );

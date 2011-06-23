@@ -81,13 +81,13 @@ class FlatJsonDataSetProducer(
 
   private def produceTable( table: TableInDataSet ): Unit = {
     // [{ "colWithString":"1DEMOPARTNERK", "colWithInt":1, "colWithWhatever":null }, ...]
-    logger.debug( "produceTable: " + table.name )
+    logger.debug( "produceTable: " + table.tableName )
 
-    if ( isNewTable( table.name ) ) {
-      if ( _orderedTableNameMap.containsTable( table.name ) )
-        _orderedTableNameMap.setLastTable( table.name )
+    if ( isNewTable( table.tableName ) ) {
+      if ( _orderedTableNameMap.containsTable( table.tableName ) )
+        _orderedTableNameMap.setLastTable( table.tableName )
       else
-        _orderedTableNameMap.add(table.name, createTableMetaData( table ) )
+        _orderedTableNameMap.add(table.tableName, createTableMetaData( table ) )
     }
 
     consumer.startTable( table.metaData )

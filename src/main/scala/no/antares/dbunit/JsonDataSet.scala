@@ -26,22 +26,23 @@ import scala.collection.JavaConversions._
 import scala.collection._
 
 /** @author Sommy Skodje */
-class JsonDataSet( val jsonS: String ) {
+class JsonDataSet( val jsonS: String, private val nameConverter: AbstractNameConverter ) {
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
-  val dataset  = json.getJSONObject( "dataset" );
+  val dataset  = json.getJSONObject( nameConverter.dataSetName( "dataset" ) )
 
   def tables(): Iterator[ TableInDataSet ] = {
-    dataset.keys().map( key => new TableInDataSet( key.toString, dataset.getJSONArray( key.toString ) ) )
+    dataset.keys().map( key => new TableInDataSet( key.toString, dataset.getJSONArray( key.toString ), nameConverter ) )
   }
 
   def toString(indentFactor: Int): String = json.toString( indentFactor )
 }
 
-class TableInDataSet( val name: String, private val rowz: JSONArray ) {
+class TableInDataSet( val oldName: String, private val rowz: JSONArray, private val nameConverter: AbstractNameConverter ) {
   private final val logger: Logger = LoggerFactory.getLogger(classOf[TableInDataSet])
 
+  val tableName  = nameConverter.tableName( oldName )
   lazy val metaData  = createTableMetaData()
 
   def rows(): Iterator[ RowInDataSet ] = {
@@ -55,8 +56,9 @@ class TableInDataSet( val name: String, private val rowz: JSONArray ) {
     val columnz  = new mutable.ListBuffer[ ColumnInDataSet ]
 
     row.rowO.keys().foreach( key => {
-      val name  = key.toString
-      columnz.append( new ColumnInDataSet( name, row.rowO.get( name ) ) )
+      val value  = row.rowO.get( key.toString )
+      val colName  = nameConverter.columnName( key.toString )
+      columnz.append( new ColumnInDataSet( colName, value ) )
     } )
     columnz.toIterator
   }
@@ -66,17 +68,17 @@ class TableInDataSet( val name: String, private val rowz: JSONArray ) {
     val rowOut  = new ArrayList[Object]()
     for ( i <- 0.until( nCols ) )
       rowOut.add( null )
-    columns( rowIn ).foreach( column => { rowOut( metaData.getColumnIndex( column.name ) )  = column.value } )
+    columns( rowIn ).foreach( column => { rowOut( metaData.getColumnIndex( column.colName ) )  = column.value } )
     rowOut.toArray
   }
 
   private def createTableMetaData(): ITableMetaData = {
     if (logger.isDebugEnabled)
-      logger.debug("createTableMetaData(tableName={}) - start", name )
+      logger.debug("createTableMetaData(tableName={}) - start", tableName )
     val cols  = new mutable.HashSet[ String ]()
-    rows().foreach( row => columns( row ).foreach( column => cols.add( column.name ) ) )
+    rows().foreach( row => columns( row ).foreach( column => cols.add( column.colName ) ) )
     val columnz = cols.map( colName => new Column( colName, DataType.UNKNOWN ) )
-    return new DefaultTableMetaData( name, columnz.toArray[ Column ] )
+    return new DefaultTableMetaData( tableName, columnz.toArray[ Column ] )
   }
 
 }
@@ -87,4 +89,4 @@ class RowInDataSet( val table: TableInDataSet, val rowO: JSONObject ) {
   }
 }
 
-class ColumnInDataSet( val name: String, val value: Object )
+class ColumnInDataSet( val colName: String, val value: Object )
