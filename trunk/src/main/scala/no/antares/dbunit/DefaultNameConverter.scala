@@ -1,4 +1,4 @@
-/* AbstractNameConverter.scala
+/* DefaultNameConverter.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ import org.dbunit.dataset.Column
 /** Interface + default implementation of a name converter
  @author Tommy Skodje
 */
-abstract class AbstractNameConverter {
+class DefaultNameConverter {
 
   def dataSetName( oldName: String ): String  = oldName;
   def tableName( oldName: String ): String  = oldName;

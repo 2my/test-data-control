@@ -32,6 +32,7 @@ import org.apache.tools.ant.Project
 import org.codehaus.jettison.json.JSONObject
 import io.{BufferedSource, Source}
 import no.antares.util.FileUtil
+import no.antares.dbunit.DefaultNameConverter
 
 /** Common Code for database
  * @author Tommy Skodje
@@ -68,18 +69,10 @@ class DbWrapper( val properties: DbProperties ) {
   def rollback(): Unit	= connection.rollback()
 
   /**  */
-  def refreshWithFlatJSON( jsonS: String, convertCamelNames: Boolean ): Unit = {
-    val json	= new JsonDataSet( jsonS, new AbstractNameConverter {} )
+  def refreshWithFlatJSON( json: JsonDataSet ): Unit = {
     val producer  = new FlatJsonDataSetProducer( json )
-    producer.setConvertCamelNames( convertCamelNames )
     val dataSet = new CachedDataSet( producer )
     DatabaseOperation.REFRESH.execute( getDbUnitConnection(), dataSet );
-  }
-
-  /**  */
-  def refreshWithFlatJSON( json: File, convertCamelNames: Boolean ): Unit = {
-    val lines = scala.io.Source.fromFile( json ).mkString
-    refreshWithFlatJSON( lines, convertCamelNames );
   }
 
   /**  */

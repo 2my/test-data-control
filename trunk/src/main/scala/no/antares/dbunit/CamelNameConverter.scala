@@ -17,7 +17,8 @@ package no.antares.dbunit
 
 /** @author tommyskodje */
 
-class CamelNameConverter( val jsonDataSetName: String ) extends AbstractNameConverter {
+class CamelNameConverter( val jsonDataSetName: String ) extends DefaultNameConverter {
+  def this()  = this( "dataset" )
 
   override def dataSetName( oldName: String ): String  = jsonDataSetName;
   override def tableName( oldName: String ): String  = camel2underscored( oldName );
