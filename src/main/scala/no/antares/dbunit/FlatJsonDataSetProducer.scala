@@ -50,10 +50,6 @@ class FlatJsonDataSetProducer(
   private var consumer: IDataSetConsumer = new DefaultConsumer  // responsible for creating the datasets and tables
   private var _orderedTableNameMap: OrderedTableNameMap = null  // also holds the currently active {@link ITableMetaData}
 
-  var convertCamelNames = false;
-  // TODO: should move conversion to json parsing
-  def setConvertCamelNames( doConvert: Boolean ): Unit = convertCamelNames  = doConvert
-
   private def isNewTable(tableName: String): Boolean = { ! _orderedTableNameMap.isLastTable(tableName) }
 
   /********************************************************************************/
@@ -64,8 +60,6 @@ class FlatJsonDataSetProducer(
       consumer = new BufferedConsumer( consumerIn )
     else
       consumer = consumerIn
-    if ( convertCamelNames )
-      consumer = new CamelNameConverterConsumer( consumer )
   }
 
   /** IDataSetProducer interface */

@@ -26,7 +26,7 @@ import scala.collection.JavaConversions._
 import scala.collection._
 
 /** @author Sommy Skodje */
-class JsonDataSet( val jsonS: String, private val nameConverter: AbstractNameConverter ) {
+class JsonDataSet( val jsonS: String, private val nameConverter: DefaultNameConverter ) {
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
@@ -39,7 +39,7 @@ class JsonDataSet( val jsonS: String, private val nameConverter: AbstractNameCon
   def toString(indentFactor: Int): String = json.toString( indentFactor )
 }
 
-class TableInDataSet( val oldName: String, private val rowz: JSONArray, private val nameConverter: AbstractNameConverter ) {
+class TableInDataSet( val oldName: String, private val rowz: JSONArray, private val nameConverter: DefaultNameConverter ) {
   private final val logger: Logger = LoggerFactory.getLogger(classOf[TableInDataSet])
 
   val tableName  = nameConverter.tableName( oldName )

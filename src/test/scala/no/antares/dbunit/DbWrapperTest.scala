@@ -47,19 +47,8 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @Test def testJsonToDB_simple() {
     db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
-    db.refreshWithFlatJSON( TstString.jsonTestData, true )
-
-    val json	= new JSONObject( TstString.jsonTestData )
-    val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
-    println( expected )
-
-    val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
-		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
-	}
-
-  @Test def testJsonToDB_variants() {
-    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
-    db.refreshWithFlatJSON( TstString.jsonTestData, true )
+    val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
+    db.refreshWithFlatJSON( jsonSet )
 
     val json	= new JSONObject( TstString.jsonTestData )
     val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
@@ -71,9 +60,9 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @Test def testJsonToDB_file() {
     db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
-
-    val f = FileUtil.getFromClassPath( "credentialz.json" )
-    db.refreshWithFlatJSON( f, false )
+    val jsonS = scala.io.Source.fromFile( FileUtil.getFromClassPath( "credentialz.json" ) ).mkString
+    val jsonSet	= new JsonDataSet( jsonS, new DefaultNameConverter() )
+    db.refreshWithFlatJSON( jsonSet )
 
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
