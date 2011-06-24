@@ -40,8 +40,6 @@ import no.antares.util.FileUtil
 /** @author Tommy Skodje */
 @RunWith(classOf[Parameterized])
 class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
-// class DbWrapperTest() extends AssertionsForJUnit {
-//  val db: DbWrapper  = new TstDbDerby()
 
   @After def cleanUp  = db.rollback()
 
@@ -60,8 +58,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @Test def testJsonToDB_file() {
     db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
-    val jsonS = scala.io.Source.fromFile( FileUtil.getFromClassPath( "credentialz.json" ) ).mkString
-    val jsonSet	= new JsonDataSet( jsonS, new DefaultNameConverter() )
+    val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ) )
     db.refreshWithFlatJSON( jsonSet )
 
     val expectedXml = XML.loadString(Credential.flatXmlTestData)

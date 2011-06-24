@@ -24,22 +24,49 @@ import org.codehaus.jettison.json.{JSONObject, JSONArray}
 
 import scala.collection.JavaConversions._
 import scala.collection._
+import java.io.File
+import mutable.ListBuffer
 
-/** @author Sommy Skodje */
-class JsonDataSet( val jsonS: String, private val nameConverter: DefaultNameConverter ) {
+/** @author Tommy Skodje */
+class JsonDataSet(
+  val jsonS: String,
+  private val nameConverter: DefaultNameConverter
+) {
+  def this( jsonS: String )  = this( jsonS, new DefaultNameConverter() );
+  def this( jsonF: File, nameConverter: DefaultNameConverter  = new DefaultNameConverter() )  = {
+    this( scala.io.Source.fromFile( jsonF ).mkString, nameConverter )
+  }
+
+
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
   val dataset  = json.getJSONObject( nameConverter.dataSetName( "dataset" ) )
 
-  def tables(): Iterator[ TableInDataSet ] = {
-    dataset.keys().map( key => new TableInDataSet( key.toString, dataset.getJSONArray( key.toString ), nameConverter ) )
+  def tables(): List[ TableInDataSet ] = {
+    val tbls  = new ListBuffer[ TableInDataSet ]
+    dataset.keys().foreach( key => collect( key.toString ) )
+    def collect( tName: String ): Unit = {
+      if ( ! tName.isEmpty ) {
+        dataset.get( tName ) match {
+          case a: JSONArray   => tbls.add( new TableInDataSet( tName, a, nameConverter ) )
+          case o: JSONObject => tbls.add( new TableInDataSet( tName, toJSONArray( o ), nameConverter ) )
+          case other: AnyRef => logger.error( "found unknown type for key ({}) in json data set: {}", tName, other.toString )
+        }
+      }
+    }
+
+    tbls.toList
   }
 
   def toString(indentFactor: Int): String = json.toString( indentFactor )
+
+  def toJSONArray( obj: JSONObject ) = ( new JSONArray() ).put( obj )
+
 }
 
 class TableInDataSet( val oldName: String, private val rowz: JSONArray, private val nameConverter: DefaultNameConverter ) {
+
   private final val logger: Logger = LoggerFactory.getLogger(classOf[TableInDataSet])
 
   val tableName  = nameConverter.tableName( oldName )
