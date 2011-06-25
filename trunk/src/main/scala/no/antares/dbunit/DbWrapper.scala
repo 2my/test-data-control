@@ -216,22 +216,16 @@ class DbWrapper( val properties: DbProperties ) {
      */
     try {
       Class.forName(driver).newInstance();
-      System.out.println("Loaded the appropriate driver");
+      logger.debug( "Loaded the appropriate driver" );
     } catch {
       case ex: ClassNotFoundException => {
-        System.err.println("\nUnable to load the JDBC driver " + driver);
-        System.err.println("Please check your CLASSPATH.");
-        ex.printStackTrace(System.err);
+        logger.error( "\nUnable to load the JDBC driver " + driver + "\nPlease check your CLASSPATH." , ex );
       }
       case ex: InstantiationException => {
-        System.err.println(
-          "\nUnable to instantiate the JDBC driver " + driver);
-        ex.printStackTrace(System.err);
+        logger.error( "\nUnable to instantiate the JDBC driver " + driver, ex );
       }
       case ex: IllegalAccessException => {
-        System.err.println(
-          "\nNot allowed to access the JDBC driver " + driver);
-        ex.printStackTrace(System.err);
+        logger.error( "\nNot allowed to access the JDBC driver " + driver, ex );
       }
     }
   }
