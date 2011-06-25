@@ -68,7 +68,7 @@ object TstString {
   def jsonTestData	= """{
 	"dataset": {
 		"tstStrings": [
-			{ "colWithString": "1DEMOPARTNERK"  }
+			{ "colWithString": "1 ÆØÅ +sdlkf"  }
 		]
 	}
 }"""

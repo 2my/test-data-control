@@ -26,13 +26,16 @@ import xml.XML
 
 import no.antares.dbunit.model.TstString
 import no.antares.util.XmlStreamer
+import org.slf4j.{LoggerFactory, Logger}
 
 
 /**  */
 class XmlStreamerTest extends AssertionsForJUnit {
 
+  private final val logger: Logger = LoggerFactory.getLogger( classOf[XmlStreamerTest] )
+
   @Test def testJson2Xml() {
-    println( TstString.jsonTestData );
+    logger.info( TstString.jsonTestData );
     val tstJson	= new JSONObject( TstString.jsonTestData )
 
     val reader = new MappedXMLStreamReader( tstJson )
@@ -40,9 +43,9 @@ class XmlStreamerTest extends AssertionsForJUnit {
     val writer = XMLOutputFactory.newInstance().createXMLStreamWriter( resultW );
     XmlStreamer.writeAll( reader, writer )
 
-    println( resultW.toString )
+    logger.info( resultW.toString )
     val resultXml	= XML.loadString( resultW.toString )
-    assert( "1DEMOPARTNERK"  == (resultXml \\ "colWithString" text) )
+    assert( "1 ÆØÅ +sdlkf"  == (resultXml \\ "colWithString" text) )
 	}
 
 }

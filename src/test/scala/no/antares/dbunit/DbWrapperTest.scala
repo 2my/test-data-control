@@ -41,6 +41,8 @@ import converters._
 @RunWith(classOf[Parameterized])
 class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
+  private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapperTest] )
+
   @After def cleanUp  = db.rollback()
 
   @Test def testJsonToDB_simple() {
@@ -50,7 +52,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
     val json	= new JSONObject( TstString.jsonTestData )
     val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
-    println( expected )
+    logger.info( expected )
 
     val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
 		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
@@ -66,7 +68,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
     val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
 
 		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
-		println( partialResult \\ "@PASS_WORD" text )
+		logger.info( partialResult \\ "@PASS_WORD" text )
 	}
 
   @Test def verify_extractFlatXml() {
@@ -77,7 +79,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
     val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
 
 		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
-		println( partialResult \\ "@PASS_WORD" text )
+		logger.info( partialResult \\ "@PASS_WORD" text )
   }
 
   @Test def verify_stream2FlatXml() {
@@ -88,7 +90,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 		val fullResult	= db.stream2FlatXml()
 
 		assert( (expectedXml \\ "@USER_NAME" text)  === (fullResult \\ "@USER_NAME" text) )
-		println( fullResult \\ "@NAME" text )
+		logger.info( fullResult \\ "@NAME" text )
   }
 
   def xmlElements( nodes: Node, elementName: String ): List[Elem] = {
