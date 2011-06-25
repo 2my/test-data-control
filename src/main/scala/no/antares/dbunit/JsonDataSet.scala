@@ -27,6 +27,9 @@ import scala.collection._
 import java.io.File
 import mutable.ListBuffer
 
+import converters.DefaultNameConverter
+
+
 /** @author Tommy Skodje */
 class JsonDataSet(
   val jsonS: String,
@@ -41,7 +44,7 @@ class JsonDataSet(
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
-  val dataset  = json.getJSONObject( nameConverter.dataSetName( "dataset" ) )
+  val dataset  = json.getJSONObject( nameConverter.dataSetName() )
 
   def tables(): List[ TableInDataSet ] = {
     val tbls  = new ListBuffer[ TableInDataSet ]

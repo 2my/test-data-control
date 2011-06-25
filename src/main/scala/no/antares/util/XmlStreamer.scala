@@ -1,3 +1,5 @@
+package no.antares.util
+
 /*  Found code at http://www.java2s.com/Code/Java/XML/XmlReaderToWriter.htm
  *   Copyright 2004 The Apache Software Foundation
  *
@@ -13,8 +15,6 @@
  *   See the License for the specific language governing permissions and
  *  limitations under the License.
 */
-package no.antares.xstream
-
 import javax.xml.stream.{XMLStreamConstants, XMLStreamReader, XMLStreamWriter}
 
 /** Streams from xml reader to writer. */
