@@ -35,7 +35,7 @@ import no.antares.utils.TstContext
 import java.util.{ArrayList, Date}
 import java.io.{File, OutputStream, InputStream}
 import no.antares.util.FileUtil
-
+import converters._
 
 /** @author Tommy Skodje */
 @RunWith(classOf[Parameterized])
@@ -58,7 +58,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @Test def testJsonToDB_file() {
     db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
-    val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ) )
+    val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ), new ConditionalCamelNameConverter() )
     db.refreshWithFlatJSON( jsonSet )
 
     val expectedXml = XML.loadString(Credential.flatXmlTestData)

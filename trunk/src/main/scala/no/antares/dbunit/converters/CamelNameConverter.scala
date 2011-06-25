@@ -1,3 +1,5 @@
+package no.antares.dbunit.converters
+
 /* CamelNameConverter.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
@@ -13,14 +15,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package no.antares.dbunit
-
 /** @author tommyskodje */
 
-class CamelNameConverter( val jsonDataSetName: String ) extends DefaultNameConverter {
+class CamelNameConverter( private val jsonDataSetNam: String ) extends DefaultNameConverter( jsonDataSetNam ) {
   def this()  = this( "dataset" )
 
-  override def dataSetName( oldName: String ): String  = jsonDataSetName;
+  override def dataSetName(): String  = jsonDataSetName;
   override def tableName( oldName: String ): String  = camel2underscored( oldName );
   override def columnName( oldName: String ): String  = camel2underscored( oldName );
 

@@ -1,3 +1,5 @@
+package no.antares.utils
+
 /* XmlStreamerTest.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
@@ -13,19 +15,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package no.antares.xstream
-
 import java.io._
 import javax.xml.stream.XMLOutputFactory
 
 import org.codehaus.jettison.mapped.MappedXMLStreamReader
 import org.codehaus.jettison.json.JSONObject
 import org.scalatest.junit.AssertionsForJUnit
-import org.junit.{Test, Before}
+import org.junit.Test
 import xml.XML
 
 import no.antares.dbunit.model.TstString
-import no.antares.xstream.XmlStreamer
+import no.antares.util.XmlStreamer
 
 
 /**  */

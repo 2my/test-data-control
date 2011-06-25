@@ -32,7 +32,8 @@ import org.apache.tools.ant.Project
 import org.codehaus.jettison.json.JSONObject
 import io.{BufferedSource, Source}
 import no.antares.util.FileUtil
-import no.antares.dbunit.DefaultNameConverter
+import converters.DefaultNameConverter
+import collection.mutable.ListBuffer
 
 /** Common Code for database
  * @author Tommy Skodje
@@ -40,6 +41,13 @@ import no.antares.dbunit.DefaultNameConverter
 class DbWrapper( val properties: DbProperties ) {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
+
+  private val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
+
+  if ( properties.driver.endsWith( "OracleDriver" ) ) {
+    dbUnitProperties.append( ( DatabaseConfig.FEATURE_SKIP_ORACLE_RECYCLEBIN_TABLES, true.asInstanceOf[Object] ) );
+    dbUnitProperties.append( ( DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new org.dbunit.ext.oracle.OracleDataTypeFactory() ) );
+  }
 
   loadDriver( properties.driver );
   protected val dbConnection: Connection	= connect()
@@ -49,9 +57,7 @@ class DbWrapper( val properties: DbProperties ) {
   def getDbUnitConnection(): DatabaseConnection = {
     val dbuConnection = new DatabaseConnection( connection, properties.schema );
     val config = dbuConnection.getConfig();
-    // config.setProperty( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, true )
-    config.setProperty( DatabaseConfig.FEATURE_SKIP_ORACLE_RECYCLEBIN_TABLES, true )
-    config.setProperty( DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new org.dbunit.ext.oracle.OracleDataTypeFactory() )
+    dbUnitProperties.foreach( property => config.setProperty( property._1, property._2 ) );
     dbuConnection
   }
 

@@ -1,3 +1,5 @@
+package no.antares.dbunit.converters
+
 /* DefaultNameConverter.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
@@ -13,16 +15,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package no.antares.dbunit
-
 import org.dbunit.dataset.Column
 
 /** Interface + default implementation of a name converter
  @author Tommy Skodje
 */
-class DefaultNameConverter {
+class DefaultNameConverter( val jsonDataSetName: String ) {
+  def this()  = this( "dataset" )
 
-  def dataSetName( oldName: String ): String  = oldName;
+  def dataSetName(): String  = jsonDataSetName;
   def tableName( oldName: String ): String  = oldName;
   def columnName( oldName: String ): String  = oldName;
 
