@@ -136,7 +136,6 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.4</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
@@ -146,22 +145,64 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>/LICENSE</include>
-                        <include>/NOTICE</include>
-                        <include>**</include>
-                    </includes>
-                </configuration>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <!-- executions>
+                    <execution>
+                        <id>deploy-all</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-file</goal>
+                        </goals>
+                        <configuration>
+                            <sources>${basedir}/target/test.data-control-0.5-SNAPSHOT-dist.zip</sources>
+                            <javadoc>${basedir}/target/test-classes</javadoc>
+                        </configuration>
+                    </execution>
+                </executions -->
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <!-- configuration>
+                    <includes>
+                        <include>${basedir}/LICENSE</include>
+                        <include>${basedir}/NOTICE</include>
+                        <include>**</include>
+                    </includes>
+                </configuration -->
+            </plugin>
+            <!-- plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>${basedir}/src/main/scala/**</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin -->
+            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly.xml</descriptor>
-                    </descriptors>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 	</build>
