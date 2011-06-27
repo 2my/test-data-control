@@ -28,6 +28,7 @@ import java.io.File
 import mutable.ListBuffer
 
 import converters.DefaultNameConverter
+import java.lang.RuntimeException
 
 
 /** @author Tommy Skodje */
@@ -44,14 +45,32 @@ class JsonDataSet(
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
-  val dataset  = json.getJSONObject( nameConverter.dataSetName() )
+  val dataset: JSONArray = json.get( nameConverter.dataSetName() ) match {
+    case a: JSONArray   => a
+    case o: JSONObject => toJSONArray( o )
+    case other: AnyRef => {
+      logger.error( "found unknown top-element in json data set: {}", other.toString )
+      throw new RuntimeException( "found unknown top-element in json data set" )
+    }
+  }
+
 
   def tables(): List[ TableInDataSet ] = {
     val tbls  = new ListBuffer[ TableInDataSet ]
-    dataset.keys().foreach( key => collect( key.toString ) )
+    foreach( dataset, collect(_) )
+    def collect( o: JSONObject ): Unit = tbls.appendAll( tablesO( o ) )
+
+    tbls.toList
+  }
+
+  def toString(indentFactor: Int): String = json.toString( indentFactor )
+
+  private def tablesO( o: JSONObject ): List[ TableInDataSet ] = {
+    val tbls  = new ListBuffer[ TableInDataSet ]
+    o.keys().foreach( key => collect( key.toString ) )
     def collect( tName: String ): Unit = {
       if ( ! tName.isEmpty ) {
-        dataset.get( tName ) match {
+        o.get( tName ) match {
           case a: JSONArray   => tbls.add( new TableInDataSet( tName, a, nameConverter ) )
           case o: JSONObject => tbls.add( new TableInDataSet( tName, toJSONArray( o ), nameConverter ) )
           case other: AnyRef => logger.error( "found unknown type for key ({}) in json data set: {}", tName, other.toString )
@@ -62,9 +81,16 @@ class JsonDataSet(
     tbls.toList
   }
 
-  def toString(indentFactor: Int): String = json.toString( indentFactor )
+  private def toJSONArray( obj: JSONObject ) = ( new JSONArray() ).put( obj )
 
-  def toJSONArray( obj: JSONObject ) = ( new JSONArray() ).put( obj )
+  private def foreach[T]( a: JSONArray, f: JSONObject => T ): List[ T ] = {
+    val result  = new mutable.ListBuffer[ T ]
+    for ( i <- 0.until( a.length ) ) {
+      val o  = a.getJSONObject( i )
+      result.append( f( o ) );
+    }
+    result.toList
+  }
 
 }
 
