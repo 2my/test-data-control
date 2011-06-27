@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -12,7 +11,7 @@
 	<groupId>no.antares</groupId>
 	<artifactId>test.data-control</artifactId>
 	<name>xstream-dbunit</name>
-	<version>0.5-SNAPSHOT</version>
+	<version>0.5</version>
     <packaging>jar</packaging>
 
     <url>http://code.google.com/p/test-data-control/</url>
@@ -31,9 +30,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:http://test-data-control.googlecode.com/svn/trunk/</connection>
-        <developerConnection>scm:svn:https://test-data-control.googlecode.com/svn/trunk/</developerConnection>
-        <url>http://test-data-control.googlecode.com/svn/trunk/</url>
+        <connection>scm:svn:http://test-data-control.googlecode.com/svn/tags/test.data-control-0.5</connection>
+        <developerConnection>scm:svn:https://test-data-control.googlecode.com/svn/tags/test.data-control-0.5</developerConnection>
+        <url>http://test-data-control.googlecode.com/svn/tags/test.data-control-0.5</url>
     </scm>
     <issueManagement>
         <system>Google code</system>
@@ -68,7 +67,7 @@
                                 <taskdef name="mytask" classname="no.antares.dbunit.JsonDbUnitAntTask" >
                                     <classpath refid="maven.compile.classpath" />
                                 </taskdef>
-                                <mytask message="Hello World! Greeetings from JsonDbUnitAntTask!"/>
+                                <mytask message="Hello World! Greeetings from JsonDbUnitAntTask!" />
                             </target>
                         </configuration>
                         <goals>
