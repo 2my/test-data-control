@@ -34,6 +34,7 @@ import io.{BufferedSource, Source}
 import no.antares.util.FileUtil
 import converters.DefaultNameConverter
 import collection.mutable.ListBuffer
+import org.apache.derby.tools.ij
 
 /** Common Code for database
  * @author Tommy Skodje
@@ -47,7 +48,8 @@ class DbWrapper( val properties: DbProperties ) {
   if ( properties.driver.endsWith( "OracleDriver" ) ) {
     dbUnitProperties.append( ( DatabaseConfig.FEATURE_SKIP_ORACLE_RECYCLEBIN_TABLES, true.asInstanceOf[Object] ) );
     dbUnitProperties.append( ( DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new org.dbunit.ext.oracle.OracleDataTypeFactory() ) );
-  }
+  } else if ( properties.driver.startsWith( "org.apache.derby" ) )
+    dbUnitProperties.append( ( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, false.asInstanceOf[Object] ) )
 
   loadDriver( properties.driver );
   protected val dbConnection: Connection	= connect()
@@ -55,7 +57,11 @@ class DbWrapper( val properties: DbProperties ) {
   protected def connection(): Connection	= dbConnection;
 
   def getDbUnitConnection(): DatabaseConnection = {
-    val dbuConnection = new DatabaseConnection( connection, properties.schema );
+    val dbuConnection =
+      if ( properties.schema.isEmpty )
+        new DatabaseConnection( connection );
+      else
+        new DatabaseConnection( connection, properties.schema );
     val config = dbuConnection.getConfig();
     dbUnitProperties.foreach( property => config.setProperty( property._1, property._2 ) );
     dbuConnection
@@ -132,7 +138,9 @@ class DbWrapper( val properties: DbProperties ) {
 
   def runSqlScripts( scripts: String* ): Boolean = {
     var ok  = true;
-    scripts.foreach( script => ok = ok && runSqlScript( script ) )
+    for ( script <- scripts )
+      if ( ! runSqlScript( script ) )
+        ok = false
     return ok;
   }
 
@@ -158,11 +166,11 @@ class DbWrapper( val properties: DbProperties ) {
     val writer = new StringWriter();
     IOUtils.copy( script.stream, writer, script.encoding )
     executeSql( writer.toString() )
-    true
   }
 
   /** Use ant (http://stackoverflow.com/questions/2071682/how-to-execute-sql-script-file-in-java) */
-  def executeSql( script: String ): Unit = {
+  def executeSql( script: String ): Boolean = {
+    try {
       val executer = new SQLExec()
       val project = new Project();
       project.init();
@@ -177,6 +185,10 @@ class DbWrapper( val properties: DbProperties ) {
       executer.setUrl( properties.dbUrl );
       executer.addText( script )
       executer.execute();
+    } catch {
+      case t: Throwable => return false;
+    }
+    true;
   }
 
   /** Bundles stream with encoding, default to UTF-8 */

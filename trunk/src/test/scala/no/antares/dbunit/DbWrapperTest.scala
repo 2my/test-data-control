@@ -144,11 +144,16 @@ object DbWrapperTest {
 
 private class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
 
-private class TstDbDerby extends DbWrapper( new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" ) ) {
+class TstDbDerby extends DbWrapper( new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" ) ) {
   private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
   override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
-    val result = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
-    logger.debug( "ij.runScript, result code is: " + result );
-    return (result==0);
+    try {
+      val result  = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
+      logger.debug( "ij.runScript, result code is: " + result );
+      return (result==0);
+    } catch {
+      case t: Throwable => return false;
+    }
   }
+
 }
