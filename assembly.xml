@@ -17,6 +17,9 @@
         </fileSet>
         <fileSet>
             <directory>src</directory>
+            <excludes>
+                <exclude>**/AdHoc*.*</exclude>
+            </excludes>
         </fileSet>
         <fileSet>
             <directory>target/site</directory>
