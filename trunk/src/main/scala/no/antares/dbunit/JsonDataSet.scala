@@ -37,50 +37,54 @@ class JsonDataSet(
   val jsonS: String,
   private val nameConverter: DefaultNameConverter
 ) {
+
   def this( jsonS: String )  = this( jsonS, new DefaultNameConverter() );
   def this( jsonF: File, nameConverter: DefaultNameConverter  = new DefaultNameConverter() )  = {
     this( scala.io.Source.fromFile( jsonF ).mkString, nameConverter )
   }
 
-
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
 
-  val dataset = new ListBuffer[ JSONObject ]()
-  json.keys().foreach( key => {
-    json.get( key.toString ) match {
-      case a: JSONArray   => dataset.addAll( toList( a ) )
-      case o: JSONObject => dataset.add( o )
-      case other: AnyRef => {
-        logger.error( "found unknown top-element in json data set: {}", other.toString )
-        throw new RuntimeException( "found unknown top-element in json data set" )
-      }
-    }
-  })
-
-
-  def tables(): List[ TableInDataSet ] = {
-    val tbls  = new ListBuffer[ TableInDataSet ]
-    dataset.foreach( o => tbls.appendAll( tablesInJsonObject( o ) ) );
-    tbls.toList
-  }
+  lazy val tables  = parseTables( json )
 
   def toString(indentFactor: Int): String = json.toString( indentFactor )
 
-  private def tablesInJsonObject( o: JSONObject ): List[ TableInDataSet ] = {
+  private def parseTables( json: JSONObject ): List[ TableInDataSet ] = {
+    val dataSets = parseDataSets( json )
+    val tbls  = new TableMap()
+    dataSets.foreach( o => tbls.putAll( tablesInDataSet( o ) ) );
+    tbls.toList
+  }
+
+  private def parseDataSets( json: JSONObject ): List[ JSONObject ] = {
+    val dataSets = new ListBuffer[ JSONObject ]()
+    json.keys().foreach( key => {
+      json.get( key.toString ) match {
+        case a: JSONArray   => dataSets.addAll( toList( a ) )
+        case o: JSONObject => dataSets.add( o )
+        case other: AnyRef => {
+          logger.error( "found unknown top-element in json data set: {}", other.toString )
+          throw new RuntimeException( "found unknown top-element in json data set" )
+        }
+      }
+    })
+    dataSets.toList
+  }
+
+  private def tablesInDataSet( jsonO: JSONObject ): List[ TableInDataSet ] = {
     val tbls  = new ListBuffer[ TableInDataSet ]
-    o.keys().foreach( key => collect( key.toString ) )
+    jsonO.keys().foreach( key => collect( key.toString ) )
     def collect( tName: String ): Unit = {
       if ( ! tName.isEmpty ) {
-        o.get( tName ) match {
+        jsonO.get( tName ) match {
           case a: JSONArray   => tbls.add( new TableInDataSet( tName, a, nameConverter ) )
           case o: JSONObject => tbls.add( new TableInDataSet( tName, toJSONArray( o ), nameConverter ) )
           case other: AnyRef => logger.error( "found unknown type for key ({}) in json data set: {}", tName, other.toString )
         }
       }
     }
-
     tbls.toList
   }
 
@@ -97,12 +101,34 @@ class JsonDataSet(
 
 }
 
+/** Keeps tables in map with name lookup to avoid multiple occurences of same table */
+private class TableMap() {
+  val tbls  = new mutable.HashMap[ String, TableInDataSet ]
+
+  def toList(): List[ TableInDataSet ] = tbls.values.toList;
+
+  def putAll( tables: List[ TableInDataSet ] ): Unit = tables.foreach( table => put( table ) );
+
+  def put( table: TableInDataSet ): Unit = {
+    if ( tbls.contains( table.tableName ) )
+      tbls( table.tableName ).addRowsFrom( table )
+    else
+      tbls( table.tableName ) = table
+  }
+}
+
 class TableInDataSet( val oldName: String, private val rowz: JSONArray, private val nameConverter: DefaultNameConverter ) {
 
   private final val logger: Logger = LoggerFactory.getLogger(classOf[TableInDataSet])
 
   val tableName  = nameConverter.tableName( oldName )
   lazy val metaData  = createTableMetaData()
+
+  def addRowsFrom( copyFrom: TableInDataSet ): Unit = {
+    val newRowz = copyFrom.rowz;
+    for ( i <- 0.until( newRowz.length ) )
+      rowz.put( newRowz.getJSONObject( i ) )
+  }
 
   def rows(): Iterator[ RowInDataSet ] = {
     val result  = new mutable.ListBuffer[ RowInDataSet ]

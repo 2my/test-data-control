@@ -24,30 +24,40 @@ import converters._
 import com.sun.tools.javac.comp.Check
 import java.lang.Boolean
 import org.codehaus.jettison.json.{JSONObject, JSONArray}
+import org.dbunit.dataset.ITableMetaData
 
 /** @author Tommy Skodje */
 class JsonDataSetTest extends AssertionsForJUnit {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[JsonDataSetTest] )
 
-  @Test def testJsonToDB_simple() {
+  @Test def test_tableParsing() {
     val jsonSet	= new JsonDataSet( mixedJsonData )
-    val t = jsonSet.tables()
+    val t = jsonSet.tables
+
+    assert( 2 == t.size )
 
     assert( "NAMET"  === t(0).tableName )
-    assertContains( t(0).row(0), ("ID", 1 ) )
+    assert( 4 == t(0).metaData.getColumns.length )
 
-    assert( "LIMT"  === t(1).tableName )
+    assert( "LIMT"   === t(1).tableName )
+    assert( 2 == t(1).metaData.getColumns.length )
+	}
+
+  @Test def test_rowParsing() {
+    val jsonSet	= new JsonDataSet( mixedJsonData )
+    val t = jsonSet.tables
+
+    assert( 4 == t(0).rows().size )
+    assertContains( t(0).row(0), ("ID", 1 ), ("M1", "a" ) )
+    assertContains( t(0).row(1), ("ID", 2 ), ("M2", "b" ) )
+    assertContains( t(0).row(2), ("ID", 3 ), ("M2", "c" ) )
+    assertContains( t(0).row(3), ("ID", 4 ), ("M1", "e" ) )
+
+    assert( 3 == t(1).rows().size )
     assertContains( t(1).row(0), ("ID", 1 ), ("LIM", 4 ) )
-
-    assert( "LIMT"  === t(3).tableName )
-    assertContains( t(3).row(0), ("ID", 2 ), ("LIM", 3 ) )
-
-    assert( "NAMET"  === t(5).tableName )
-    assertContains( t(5).row(0), ("ID", 4 ) )
-
-    assert( "LIMT"  === t(6).tableName )
-    assertContains( t(6).row(0), ("ID", 4 ), ("LIM", 1 ) )
+    assertContains( t(1).row(1), ("ID", 2 ), ("LIM", 3 ) )
+    assertContains( t(1).row(2), ("ID", 4 ), ("LIM", 1 ) )
 	}
 
   private def assertContains( row: List[ ColumnInDataSet ], expected: Tuple2[ String, Any ]*) {
@@ -62,19 +72,19 @@ class JsonDataSetTest extends AssertionsForJUnit {
 
   val mixedJsonData =
 """{
-	"petterIkea": {
-		"NAMET": { "ID": 1, "NAME": "petter" },
+	"petter1": {
+		"NAMET": { "ID": 1, "NAME": "petter", "M1": "a" },
 		"LIMT": { "ID": 1, "LIM": 4 }
 	},
-	"petterDemok": {
-		"NAMET": { "ID": 2, "NAME": "petter" },
+	"petter2": {
+		"NAMET": { "ID": 2, "NAME": "petter", "M2": "b" },
 		"LIMT": { "ID": 2, "LIM": 3 }
 	},
 	"JunitTestWs": {
-		"NAMET": { "ID": 3, "NAME": "JunitTestWs" }
+		"NAMET": { "ID": 3, "NAME": "JunitTestWs", "M2": "c", "M1": "d" }
 	},
 	"Espen": {
-		"NAMET": { "ID": 4, "NAME": "ESPEN" },
+		"NAMET": { "ID": 4, "NAME": "ESPEN", "M1": "e", "M2": "f" },
 		"LIMT": { "ID": 4, "LIM": 1 }
 	}
 }""";
