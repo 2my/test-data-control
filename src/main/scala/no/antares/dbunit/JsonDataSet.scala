@@ -29,6 +29,7 @@ import mutable.ListBuffer
 
 import converters.DefaultNameConverter
 import java.lang.RuntimeException
+import java.security.Key
 
 
 /** @author Tommy Skodje */
@@ -45,27 +46,29 @@ class JsonDataSet(
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
-  val dataset: JSONArray = json.get( nameConverter.dataSetName() ) match {
-    case a: JSONArray   => a
-    case o: JSONObject => toJSONArray( o )
-    case other: AnyRef => {
-      logger.error( "found unknown top-element in json data set: {}", other.toString )
-      throw new RuntimeException( "found unknown top-element in json data set" )
+
+  val dataset = new ListBuffer[ JSONObject ]()
+  json.keys().foreach( key => {
+    json.get( key.toString ) match {
+      case a: JSONArray   => dataset.addAll( toList( a ) )
+      case o: JSONObject => dataset.add( o )
+      case other: AnyRef => {
+        logger.error( "found unknown top-element in json data set: {}", other.toString )
+        throw new RuntimeException( "found unknown top-element in json data set" )
+      }
     }
-  }
+  })
 
 
   def tables(): List[ TableInDataSet ] = {
     val tbls  = new ListBuffer[ TableInDataSet ]
-    foreach( dataset, collect(_) )
-    def collect( o: JSONObject ): Unit = tbls.appendAll( tablesO( o ) )
-
+    dataset.foreach( o => tbls.appendAll( tablesInJsonObject( o ) ) );
     tbls.toList
   }
 
   def toString(indentFactor: Int): String = json.toString( indentFactor )
 
-  private def tablesO( o: JSONObject ): List[ TableInDataSet ] = {
+  private def tablesInJsonObject( o: JSONObject ): List[ TableInDataSet ] = {
     val tbls  = new ListBuffer[ TableInDataSet ]
     o.keys().foreach( key => collect( key.toString ) )
     def collect( tName: String ): Unit = {
@@ -81,16 +84,16 @@ class JsonDataSet(
     tbls.toList
   }
 
-  private def toJSONArray( obj: JSONObject ) = ( new JSONArray() ).put( obj )
-
-  private def foreach[T]( a: JSONArray, f: JSONObject => T ): List[ T ] = {
-    val result  = new mutable.ListBuffer[ T ]
+  private def toList( a: JSONArray ): List[ JSONObject ] = {
+    val result  = new mutable.ListBuffer[ JSONObject ]
     for ( i <- 0.until( a.length ) ) {
       val o  = a.getJSONObject( i )
-      result.append( f( o ) );
+      result.append( o );
     }
     result.toList
   }
+
+  private def toJSONArray( obj: JSONObject ) = ( new JSONArray() ).put( obj )
 
 }
 
@@ -107,6 +110,8 @@ class TableInDataSet( val oldName: String, private val rowz: JSONArray, private 
       result.append( new RowInDataSet( this, rowz.getJSONObject( i ) ) )
     result.toIterator
   }
+
+  def row( index: Int ): List[ ColumnInDataSet ] = columns( rows().toList( index ) ).toList;
 
   def columns( row: RowInDataSet ): Iterator[ ColumnInDataSet ] = {
     val columnz  = new mutable.ListBuffer[ ColumnInDataSet ]
@@ -145,4 +150,6 @@ class RowInDataSet( val table: TableInDataSet, val rowO: JSONObject ) {
   }
 }
 
-class ColumnInDataSet( val colName: String, val value: Object )
+class ColumnInDataSet( val colName: String, val value: Object ) {
+  override def toString: String = "(" + colName + ": " + value + ")";
+}
