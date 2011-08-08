@@ -20,10 +20,8 @@ import org.dbunit.dataset.Column
 /** Interface + default implementation of a name converter
  @author Tommy Skodje
 */
-class DefaultNameConverter( val jsonDataSetName: String ) {
-  def this()  = this( "dataset" )
+class DefaultNameConverter() {
 
-  def dataSetName(): String  = jsonDataSetName;
   def tableName( oldName: String ): String  = oldName;
   def columnName( oldName: String ): String  = oldName;
 

@@ -16,10 +16,8 @@ package no.antares.dbunit.converters
    limitations under the License.
 */
 /** @author Tommy Skodje */
-class ConditionalCamelNameConverter( private val jsonDataSetNam: String ) extends CamelNameConverter( jsonDataSetNam ) {
-  def this()  = this( "dataset" )
+class ConditionalCamelNameConverter() extends CamelNameConverter() {
 
-  override def dataSetName(): String  = jsonDataSetName;
   override def tableName( oldName: String ): String  = {
     if ( isCamelCased( oldName ) )
       super.tableName( oldName )

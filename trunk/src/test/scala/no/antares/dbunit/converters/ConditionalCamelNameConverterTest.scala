@@ -24,13 +24,6 @@ import no.antares.dbunit.converters.ConditionalCamelNameConverter
 /** @author Tommy Skodje */
 class ConditionalCamelNameConverterTest extends AssertionsForJUnit {
 
-  @Test def testDataSetName() = {
-    var converter  = new CamelNameConverter()
-    assert( "dataset"  === converter.dataSetName() )
-    converter  = new CamelNameConverter( "list" )
-    assert( "list"  === converter.dataSetName() )
-  }
-
   @Test def testTableName() = {
     var converter  = new ConditionalCamelNameConverter()
     assert( "CAMEL_NAME"  === converter.tableName( "camelName" ) )

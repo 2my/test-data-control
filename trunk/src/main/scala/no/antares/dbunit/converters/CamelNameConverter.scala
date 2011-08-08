@@ -17,17 +17,15 @@ package no.antares.dbunit.converters
 */
 /** @author tommyskodje */
 
-class CamelNameConverter( private val jsonDataSetNam: String ) extends DefaultNameConverter( jsonDataSetNam ) {
-  def this()  = this( "dataset" )
+class CamelNameConverter() extends DefaultNameConverter() {
 
-  override def dataSetName(): String  = jsonDataSetName;
   override def tableName( oldName: String ): String  = camel2underscored( oldName );
   override def columnName( oldName: String ): String  = camel2underscored( oldName );
 
   private def camel2underscored( name: String ): String = {
     val underscored = new StringBuilder()
     for ( c <- name.toArray[Char] ) {
-      if ( c.isLower || ( underscored.length() == 0 ) )
+      if ( c.isLower || ( underscored.length == 0 ) )
         underscored.append( c.toUpper )
       else
         underscored.append( "_" ).append( c )
