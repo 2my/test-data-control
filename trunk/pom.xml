@@ -11,7 +11,7 @@
 	<groupId>no.antares</groupId>
 	<artifactId>test.data-control</artifactId>
 	<name>xstream-dbunit</name>
-	<version>0.6</version>
+	<version>0.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>http://code.google.com/p/test-data-control/</url>
