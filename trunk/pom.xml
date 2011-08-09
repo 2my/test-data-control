@@ -11,7 +11,7 @@
 	<groupId>no.antares</groupId>
 	<artifactId>test.data-control</artifactId>
 	<name>xstream-dbunit</name>
-	<version>0.6</version>
+	<version>0.6-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <url>http://code.google.com/p/test-data-control/</url>
@@ -30,9 +30,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:http://test-data-control.googlecode.com/svn/tags/test.data-control-0.6</connection>
-        <developerConnection>scm:svn:https://test-data-control.googlecode.com/svn/tags/test.data-control-0.6</developerConnection>
-        <url>http://test-data-control.googlecode.com/svn/tags/test.data-control-0.6</url>
+        <connection>scm:svn:http://test-data-control.googlecode.com/svn/trunk/</connection>
+    	<developerConnection>scm:svn:https://test-data-control.googlecode.com/svn/trunk/</developerConnection>
+        <url>http://test-data-control.googlecode.com/svn/trunk/</url>
     </scm>
     <issueManagement>
         <system>Google code</system>
