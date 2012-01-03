@@ -21,7 +21,6 @@ import org.scalatest.junit.AssertionsForJUnit
 import org.junit.{After, Test}
 import org.slf4j.{LoggerFactory, Logger}
 import converters._
-import com.sun.tools.javac.comp.Check
 import java.lang.Boolean
 import org.codehaus.jettison.json.{JSONObject, JSONArray}
 import org.dbunit.dataset.ITableMetaData
