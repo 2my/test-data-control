@@ -101,14 +101,20 @@
 			<plugin>
 				<groupId>org.scala-tools</groupId>
 				<artifactId>maven-scala-plugin</artifactId>
-				<executions>
-				  <execution>
-				    <goals>
-				      <goal>compile</goal>
-				      <goal>testCompile</goal>
-				    </goals>
-				  </execution>
-				</executions>
+                <executions>
+                      <execution>
+                        <goals>
+                          <goal>compile</goal>
+                        </goals>
+                      </execution>
+                    <execution>
+                        <id>scala-test-compile-first</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
 			</plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>

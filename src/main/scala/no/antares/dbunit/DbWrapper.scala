@@ -136,6 +136,7 @@ class DbWrapper( val properties: DbProperties ) {
     }
   }
 
+  def runSqlScripts( scripts: Array[String]) : Boolean = runSqlScripts(scripts.toSeq : _*);
   def runSqlScripts( scripts: String* ): Boolean = {
     var ok  = true;
     for ( script <- scripts )
