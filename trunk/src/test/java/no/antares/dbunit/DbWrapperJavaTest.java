@@ -48,7 +48,7 @@ public class DbWrapperJavaTest {
         JSONObject partialResult = db.extractFlatJson( "tst_strings", "SELECT * FROM tst_strings" );
         System.out.println( partialResult.toString( 2 ) );
 
-        String actual  = partialResult.getJSONObject("tst_strings" ).getString( "COL_WITH_STRING" );
+        String actual  = partialResult.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" );
         assertEquals(expected, actual);
     }
 
