@@ -29,12 +29,15 @@ import java.sql.{DriverManager, Connection}
 import org.apache.commons.io.IOUtils
 import org.apache.tools.ant.taskdefs.SQLExec
 import org.apache.tools.ant.Project
-import org.codehaus.jettison.json.JSONObject
 import io.{BufferedSource, Source}
 import no.antares.util.FileUtil
 import converters.DefaultNameConverter
 import collection.mutable.ListBuffer
 import org.apache.derby.tools.ij
+import javax.management.remote.rmi._RMIConnection_Stub
+import org.dbunit.dataset.csv.CsvDataSet
+import org.dbunit.dataset.stream.DataSetProducerAdapter
+import org.codehaus.jettison.json.JSONObject
 
 /** Common Code for database
  * @author Tommy Skodje
@@ -105,14 +108,33 @@ class DbWrapper( val properties: DbProperties ) {
 		DatabaseOperation.REFRESH.execute( getDbUnitConnection(), dataSet );
   }
 
-  /** partial database export */
   def extractFlatXml( tablesWithQueries: (String,String)* ): Node = {
-    val partialDataSet = new QueryDataSet( getDbUnitConnection() );
-    for ( (name, select) <- tablesWithQueries )
-      partialDataSet.addTable( name, select );
+    val partialDataSet: QueryDataSet = dataSetFor(tablesWithQueries)
     val partialResultW: StringWriter = new StringWriter();
     FlatXmlDataSet.write(partialDataSet, partialResultW);
     XML.loadString( partialResultW.toString )
+  }
+
+  /** partial database export */
+  def extractFlatJson( tablesWithQueries: (String,String)* ): JSONObject = {
+    val partialDataSet: QueryDataSet = dataSetFor(tablesWithQueries)
+    val partialResultW: StringWriter = new StringWriter();
+
+    val strWriter = new StringWriter();
+    val consumer  = new FlatJsonDataSetConsumer( strWriter )
+    val provider: DataSetProducerAdapter = new DataSetProducerAdapter( partialDataSet )
+    provider.setConsumer( consumer )
+    provider.produce()
+
+    new JSONObject( strWriter.toString )
+  }
+
+  /**  */
+  private def dataSetFor(tablesWithQueries: Iterable[(String, String)] ): QueryDataSet = {
+    val partialDataSet = new QueryDataSet(getDbUnitConnection());
+    tablesWithQueries.foreach( e => partialDataSet.addTable( e._1, e._2) )
+    // for ((name, select) <- tablesWithQueries) partialDataSet.addTable(name, select);
+    partialDataSet
   }
 
   /** full database export - setup for streaming @see http://www.dbunit.org/faq.html#streaming */
