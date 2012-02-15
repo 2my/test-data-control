@@ -30,26 +30,26 @@ extends IDataSetConsumer
 
 
   def row(values: Array[AnyRef]) {
-    var currIdx = 0;
-    // val map = values.foldLeft(Map[Int,AnyRef]()) { (m, s) => m(currIdx) = s }
-    // val string2Length = Map(values map {s => ( currIdx , s )} : _*)
+    w.writeStartElement( currTable.getTableName() )
     val m = currTable.getColumns map (_.getColumnName) zip values toMap;
-    m.foreach( e => entry( e._1, e._2 ) );
-  }
-
-  private def entry( key: String, value: AnyRef ) {
-    w.writeStartElement( key )
-    if ( value != null )
-      w.writeCharacters( value.toString )
+    m.foreach( e => column( e._1, e._2 ) );
     w.writeEndElement()
   }
 
-  def endTable() { w.writeEndElement() }
-
-  def startTable(metaData: ITableMetaData) {
-    currTable = metaData;
-    w.writeStartElement( metaData.getTableName() )
+  private def column( key: String, value: AnyRef ) {
+  	w.writeAttribute( key, toString( value ) );
+    /*
+    w.writeStartElement( key )
+    if ( value != null )
+      w.writeCharacters( value.toString )
+    w. writeEndElement()
+     */
   }
+  private def toString( value: AnyRef ): String = { if ( value != null ) value.toString() else null };
+
+  def endTable() { currTable = null; }
+
+  def startTable(metaData: ITableMetaData) { currTable = metaData; }
 
   def endDataSet() {
     w.writeEndDocument()
