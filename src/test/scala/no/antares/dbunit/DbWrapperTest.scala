@@ -82,6 +82,16 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 		logger.info( partialResult \\ "@PASS_WORD" text )
   }
 
+  @Test def verify_extractFlatJson() {
+    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    db.refreshWithFlatXml( Credential.flatXmlTestData )
+    val expectedXml = XML.loadString(Credential.flatXmlTestData)
+
+    val partialResult = db.extractFlatJson( ("credentialz", "SELECT * FROM credentialz") )
+
+		logger.info( partialResult.toString )
+  }
+
   @Test def verify_stream2FlatXml() {
     if ( "oracle.jdbc.OracleDriver" == db.properties.driver )
       return; // TODO: too much data in test database
