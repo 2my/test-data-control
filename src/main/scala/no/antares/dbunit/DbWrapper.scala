@@ -116,6 +116,8 @@ class DbWrapper( val properties: DbProperties ) {
   }
 
   /** partial database export */
+  def extractFlatJson( table: String, query: String ): JSONObject = extractFlatJson( (table, query) );
+  def extractFlatJson( tablesWithQueries: Array[(String,String)] ): JSONObject = extractFlatJson(tablesWithQueries.toSeq : _*);
   def extractFlatJson( tablesWithQueries: (String,String)* ): JSONObject = {
     val partialDataSet: QueryDataSet = dataSetFor(tablesWithQueries)
     val partialResultW: StringWriter = new StringWriter();
