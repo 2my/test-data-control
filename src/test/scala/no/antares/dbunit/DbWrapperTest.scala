@@ -43,7 +43,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapperTest] )
 
-  @After def cleanUp  = db.rollback()
+  @After def cleanUp  = db.db.rollback()
 
   @Test def testJsonToDB_simple() {
     db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
@@ -93,8 +93,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
   }
 
   @Test def verify_stream2FlatXml() {
-    if ( "oracle.jdbc.OracleDriver" == db.properties.driver )
-      return; // TODO: too much data in test database
+    // if ( "oracle.jdbc.OracleDriver" == db.db.driver ) return; // TODO: too much data in test database
     db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
@@ -160,7 +159,7 @@ class TstDbDerby extends DbWrapper( new DbProperties( "org.apache.derby.jdbc.Emb
   private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
   override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
     try {
-      val result  = ij.runScript( dbConnection, script.stream, script.encoding, output.stream, output.encoding );
+      val result  = ij.runScript( db.connection(), script.stream, script.encoding, output.stream, output.encoding );
       logger.debug( "ij.runScript, result code is: " + result );
       return (result==0);
     } catch {
