@@ -15,6 +15,7 @@
 */
 package no.antares.dbunit
 
+import converters.DefaultNameConverter
 import org.slf4j.{LoggerFactory, Logger}
 import collection.mutable.ListBuffer
 import org.dbunit.database.{DatabaseConnection, DatabaseConfig}
@@ -35,6 +36,9 @@ class DbProperties(
   val schema: String
 ) extends Db {
 
+  def this( driver: String, dbUrl: String, username: String, password: String )  = this( driver, dbUrl, username, password, "" );
+
+
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
 
   private val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
@@ -44,6 +48,9 @@ class DbProperties(
     dbUnitProperties.append( ( DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new org.dbunit.ext.oracle.OracleDataTypeFactory() ) );
   } else if ( driver.startsWith( "org.apache.derby" ) )
     dbUnitProperties.append( ( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, false.asInstanceOf[Object] ) )
+  else {
+    dbUnitProperties.append( ( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, false.asInstanceOf[Object] ) )
+  }
 
   loadDriver( driver );
   protected val dbConnection: Connection	= connect()
@@ -91,7 +98,7 @@ class DbProperties(
   protected def connect(): Connection	= {
     val connectionUrl = dbUrl;
     val connectionProperties = new Properties();
-    connectionProperties.put( "user", schema );
+    connectionProperties.put( "user", username );
     connectionProperties.put( "username", username );
     connectionProperties.put( "password", password );
 
