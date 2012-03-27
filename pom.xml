@@ -174,7 +174,7 @@
                             <goal>deploy-file</goal>
                         </goals>
                         <configuration>
-                            <sources>${basedir}/target/test.data-control-0.5-SNAPSHOT-dist.zip</sources>
+                           	<sources>${basedir}/target/test.data-control-0.5-SNAPSHOT-dist.zip</sources>
                             <javadoc>${basedir}/target/test-classes</javadoc>
                         </configuration>
                     </execution>
@@ -307,10 +307,10 @@
             <version>2.1</version>
         </dependency>
         <dependency>
-		<groupId>commons-logging</groupId>
-		<artifactId>commons-logging</artifactId>
-		<version>1.1.1</version>
-	</dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.1</version>
+		</dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbytools</artifactId>
@@ -327,19 +327,23 @@
             <artifactId>ojdbc14</artifactId>
             <version>9.2.0.5</version>
         </dependency>
+		<dependency>
+			<groupId>com.sybase</groupId>
+			<artifactId>sybase-jConnect</artifactId>
+			<version>6_0</version>
+		</dependency>
         -->
-	<dependency>
-		<groupId>com.sybase</groupId>
-		<artifactId>sybase-jConnect</artifactId>
-		<version>6_0</version>
-	</dependency>
-
-        <dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<version>4.8.2</version>
-		<scope>test</scope>
-	</dependency>
+		<dependency>
+			<groupId>net.sourceforge.jtds</groupId>
+			<artifactId>jtds</artifactId>
+			<version>1.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.2</version>
+			<scope>test</scope>
+		</dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.9.0</artifactId>
