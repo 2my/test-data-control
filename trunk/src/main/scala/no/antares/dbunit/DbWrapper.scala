@@ -84,7 +84,7 @@ class DbWrapper( val db: Db ) {
   }
 
   /**  */
-  private def dataSetFor(tablesWithQueries: Iterable[(String, String)] ): QueryDataSet = {
+  private def dataSetFor( tablesWithQueries: Iterable[(String, String)] ): QueryDataSet = {
     val partialDataSet = new QueryDataSet(getDbUnitConnection());
     tablesWithQueries.foreach( e => partialDataSet.addTable( e._1, e._2) )
     // for ((name, select) <- tablesWithQueries) partialDataSet.addTable(name, select);
@@ -102,70 +102,6 @@ class DbWrapper( val db: Db ) {
 		XML.loadString( fullResultW.toString )
   }
 
-  /**  */
-  def runSqlScriptFile( scriptFile: File ): Boolean = {
-    logger.debug( "runSqlScriptFile: " + scriptFile );
-    try {
-      return runSqlScript( new FileInputStream(scriptFile) );
-    } catch {
-      case ex: FileNotFoundException => return false;
-    }
-  }
-
-  def runSqlScripts( scripts: Array[String]) : Boolean = runSqlScripts(scripts.toSeq : _*);
-  def runSqlScripts( scripts: String* ): Boolean = {
-    var ok  = true;
-    for ( script <- scripts )
-      if ( ! runSqlScript( script ) )
-        ok = false
-    return ok;
-  }
-
-  /**  */
-  def runSqlScript( script: String ): Boolean = {
-    logger.debug( "runSqlScript: " + script );
-    return runSqlScript( new ByteArrayInputStream( script.getBytes() ) );
-  }
-
-  /**  */
-  def runSqlScript( script: Encoded[ InputStream ] ): Boolean = {
-    try {
-      return doInTransaction{ () => runSqlScript( script, new Encoded[ OutputStream ]( System.out ) ); }
-    } finally {
-      catchall { () => script.stream.close() };
-    }
-  }
-
-
-  def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
-    val writer = new StringWriter();
-    IOUtils.copy( script.stream, writer, script.encoding )
-    db.executeSql( writer.toString() )
-  }
-
   private def getDbUnitConnection() = db.getDbUnitConnection();
-
-  def doInTransaction[T]( f : () => T ): T = {
-    db.connection().setAutoCommit(false);
-    val result = f();
-    db.connection().commit();
-    result
-  }
-
-  /** Bundles stream with encoding, default to UTF-8 */
-  class Encoded[T]( val stream: T, val encoding: String ) {
-    def this( stream: T ) = this( stream, "UTF-8" )
-  }
-  /** Bundles stream with default encoding */
-  implicit def stream2encoded( stream: InputStream ): Encoded[ InputStream ] = new Encoded[ InputStream ]( stream )
-  implicit def stream2encoded( stream: OutputStream ): Encoded[ OutputStream ] = new Encoded[ OutputStream ]( stream )
-
-  def catchall( f : () => Unit ): Unit = {
-    try {
-       f()
-    } catch {
-      case t: Throwable => ;	// ignore
-    }
-  }
 
 }
