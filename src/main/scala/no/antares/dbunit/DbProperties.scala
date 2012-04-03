@@ -1,4 +1,4 @@
-/* Dbscala
+/* DbProperties.scala
    Copyright 2011 Tommy Skodje (http://www.antares.no)
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,11 @@
 */
 package no.antares.dbunit
 
-import converters.DefaultNameConverter
 import org.slf4j.{LoggerFactory, Logger}
-import collection.mutable.ListBuffer
-import org.dbunit.database.{DatabaseConnection, DatabaseConfig}
-import java.util.Properties
 import java.sql.{DriverManager, Connection}
-import java.io.OutputStream
-import org.apache.tools.ant.taskdefs.SQLExec
-import org.apache.tools.ant.Project
+import org.dbunit.database.{IDatabaseConnection, DatabaseConnection}
+import java.util.Properties
+import collection.mutable.ListBuffer
 
 /** Simple wrapper for Database connection db.
 @author Tommy Skodje
@@ -40,77 +36,40 @@ class DbProperties(
 
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
+  loadDriver( driver );
+  val connectionProperties = new Properties();
+  connectionProperties.put( "user", username );
+  connectionProperties.put( "username", username );
+  connectionProperties.put( "password", password );
+  protected val dbConnection: Connection	= DriverManager.getConnection( dbUrl, connectionProperties );
 
-  private val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
 
-  if ( driver.endsWith( "OracleDriver" ) ) {
-    dbUnitProperties.append( ( DatabaseConfig.FEATURE_SKIP_ORACLE_RECYCLEBIN_TABLES, true.asInstanceOf[Object] ) );
-    dbUnitProperties.append( ( DatabaseConfig.PROPERTY_DATATYPE_FACTORY, new org.dbunit.ext.oracle.OracleDataTypeFactory() ) );
-  } else if ( driver.startsWith( "org.apache.derby" ) )
-    dbUnitProperties.append( ( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, false.asInstanceOf[Object] ) )
-  else {
-    dbUnitProperties.append( ( DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, false.asInstanceOf[Object] ) )
+  protected val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
+
+
+  override def runSqlScript( script: String ): Boolean = {
+    val runner = new ScriptRunner( driver, dbUrl, username, password );
+    doInTransaction { () => runner.executeSql( script ) }
   }
 
-  loadDriver( driver );
-  protected val dbConnection: Connection	= connect()
-
-  def connection(): Connection	= dbConnection;
-
-  def getDbUnitConnection(): DatabaseConnection = {
+  override def getDbUnitConnection(): IDatabaseConnection = {
     val dbuConnection =
       if ( schema.isEmpty )
-        new DatabaseConnection( connection );
+        new DatabaseConnection( dbConnection );
       else
-        new DatabaseConnection( connection, schema );
+        new DatabaseConnection( dbConnection, schema );
     val config = dbuConnection.getConfig();
     dbUnitProperties.foreach( property => config.setProperty( property._1, property._2 ) );
     dbuConnection
   }
 
-  /**  */
-  def rollback(): Unit	= connection.rollback()
-
-  /** Use ant (http://stackoverflow.com/questions/2071682/how-to-execute-sql-script-file-in-java) */
-  def executeSql( script: String ): Boolean = {
-    try {
-      val executer = new SQLExec()
-      val project = new Project();
-      project.init();
-      executer.setProject(project);
-      executer.setTaskType("sql");
-      executer.setTaskName("sql");
-
-      // executer.setSrc(new File(sqlFilePath));
-      executer.setDriver( driver );
-      executer.setPassword( password );
-      executer.setUserid( username );
-      executer.setUrl( dbUrl );
-
-      executer.addText( script )
-      executer.execute();
-    } catch {
-      case t: Throwable => return false;
-    }
-    true;
-  }
-
-  protected def connect(): Connection	= {
-    val connectionUrl = dbUrl;
-    val connectionProperties = new Properties();
-    connectionProperties.put( "user", username );
-    connectionProperties.put( "username", username );
-    connectionProperties.put( "password", password );
-
-    DriverManager.getConnection( connectionUrl, connectionProperties )
-  }
 
   /**
    * Loads the appropriate JDBC driver for this environment/framework. For
    * example, if we are in an embedded environment, we load Derby's
    * embedded Driver, <code>org.apache.derby.jdbc.EmbeddedDriver</code>.
    */
-  protected def loadDriver( driver: String ): Unit = {
+  private def loadDriver( driver: String ): Unit = {
     /*
      *  The JDBC driver is loaded by loading its class.
      *  If you are using JDBC 4.0 (Java SE 6) or newer, JDBC drivers may

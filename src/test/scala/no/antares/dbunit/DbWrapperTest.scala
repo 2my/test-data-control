@@ -25,28 +25,28 @@ import no.antares.dbunit.model._
 import java.text.SimpleDateFormat
 import xml.{Node, Elem, XML}
 import org.junit.{After, Test}
-import org.junit.runners.Parameterized
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import org.slf4j.{LoggerFactory, Logger}
-import org.apache.derby.tools.ij
-import no.antares.utils.TstContext
 import java.util.{ArrayList, Date}
-import java.io.{File, OutputStream, InputStream}
 import no.antares.util.FileUtil
 import converters._
 
-/** @author Tommy Skodje */
+/**
+ * @author Tommy Skodje
+*/
 @RunWith(classOf[Parameterized])
-class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
+class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapperTest] )
 
-  @After def cleanUp  = db.db.rollback()
+  val db  = new DbWrapper( dbp );
+
+  @After def cleanUp  = dbp.rollback()
 
   @Test def testJsonToDB_simple() {
-    db.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
+    dbp.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
     val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
     db.refreshWithFlatJSON( jsonSet )
 
@@ -59,7 +59,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 	}
 
   @Test def testJsonToDB_file() {
-    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ), new ConditionalCamelNameConverter() )
     db.refreshWithFlatJSON( jsonSet )
 
@@ -72,7 +72,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 	}
 
   @Test def verify_extractFlatXml() {
-    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
@@ -83,7 +83,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
   }
 
   @Test def verify_extractFlatJson() {
-    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
@@ -94,7 +94,7 @@ class DbWrapperTest( val db: DbWrapper ) extends AssertionsForJUnit {
 
   @Test def verify_stream2FlatXml() {
     // if ( "oracle.jdbc.OracleDriver" == db.db.driver ) return; // TODO: too much data in test database
-    db.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
@@ -140,31 +140,9 @@ object DbWrapperTest {
     val configurations	= new ArrayList[ Array[Object] ]
 
     // Test with in-memory DB, default.
-    configurations.add( Array( new TstDbDerby() ) )
-
-    // should not publish our database connection - get it from xml property file
-    val context  = new TstContext( "test-context-local.xml" )
-    context.dataSourceOracle() match {
-      case Some( properties ) => configurations.add( Array( new TstDbOracle( properties ) ) );
-      case _ => ;
-    }
+    configurations.add( Array( new DbDerby() ) )
+    // configurations.add( Array( new TstDbOracle() ) )
 
     return configurations
   }
-}
-
-private class TstDbOracle( properties: DbProperties ) extends DbWrapper( properties ) {}
-
-class TstDbDerby extends DbWrapper( new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" ) ) {
-  private final val logger: Logger = LoggerFactory.getLogger( classOf[TstDbDerby] )
-  override def runSqlScript( script: Encoded[ InputStream ] , output: Encoded[ OutputStream ] ): Boolean = {
-    try {
-      val result  = ij.runScript( db.connection(), script.stream, script.encoding, output.stream, output.encoding );
-      logger.debug( "ij.runScript, result code is: " + result );
-      return (result==0);
-    } catch {
-      case t: Throwable => return false;
-    }
-  }
-
 }
