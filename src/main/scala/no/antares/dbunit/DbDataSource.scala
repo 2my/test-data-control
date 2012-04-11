@@ -15,18 +15,21 @@
 */
 package no.antares.dbunit
 
-import javax.sql.DataSource
 import org.dbunit.database.{DatabaseDataSourceConnection, IDatabaseConnection}
 import collection.mutable.ListBuffer
+import org.springframework.jdbc.datasource.DriverManagerDataSource
+import javax.sql.DataSource
 
 /**
  * @author tommy skodje
 */
 class DbDataSource(
-  val ds: DataSource, // FixMe: should not have to provide line below
+//  val ds: DataSource, // FixMe: should not have to provide line below
   val driver: String, val dbUrl: String, val username: String, val password: String,
   val schema: String
 ) extends Db {
+
+  val ds  = DbDataSource.getDataSource( driver, dbUrl, username, password );
 
   protected val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
 
@@ -48,4 +51,16 @@ class DbDataSource(
     doInTransaction { () => dbs.executeSql( script ) }
    }
 
+}
+
+object DbDataSource {
+  val instance = new DriverManagerDataSource();
+
+  def getDataSource( driverClass: String, dbUrl: String, username: String, password: String ): DataSource = {
+    instance.setDriverClassName( driverClass );
+    instance.setUrl( dbUrl );
+    instance.setUsername( username );
+    instance.setPassword( password );
+    return instance;
+  }
 }
