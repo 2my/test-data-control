@@ -43,6 +43,13 @@ class DbWrapper( val db: Db ) {
   }
 
   /**  */
+  def deleteMatchingFlatJSON( json: JsonDataSet ): Unit = {
+    val producer  = new FlatJsonDataSetProducer( json )
+    val dataSet = new CachedDataSet( producer )
+    DatabaseOperation.DELETE.execute( getDbUnitConnection(), dataSet );
+  }
+
+  /**  */
   def refreshWithFlatXml( xml: String ): Unit = {
     val builder = new FlatXmlDataSetBuilder();
     val is = new StringReader( xml );
