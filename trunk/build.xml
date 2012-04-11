@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="sdb_demo_create" default="" basedir=".">
+	<description>
+		The scripts in here are used to:
+		clean out schema sdb_demo
+		create tables, triggers, views, procedures etc.
+	</description>
+
+	<property environment="env" />
+
+	<!-- The properties listed below should be found in properties file given by your propertyfile
+	<property name="db.driver" value="oracle.jdbc.driver.OracleDriver" />
+	<property name="db.url" value="jdbc:oracle:thin:@localhost:1521:XE" />
+	<property name="db.username" value="" />
+	<property name="db.password" value="" />
+	-->
+
+	<!-- Maven provides, but if u want to run outside, get these: (ojdbc = Oracle jdbc driver) -->
+	<path id="classpath">
+		<fileset dir="." casesensitive="yes">
+			<!--
+			<include name="ojdbc14-9.2.0.5.jar" />
+			-->
+			<include name="${env.M2_REPO}/org/dbunit/dbunit/2.2/oracle/ojdbc14/9.2.0.5/ojdbc14-9.2.0.5.jar" />
+		</fileset>
+	</path>
+
+	<!-- ==================== Targets ====================================== -->
+
+	<target name="init" description="no op" >
+	</target>
+
+	<target name="clean" description="remove and recreate schema">
+	</target>
+
+	<target name="create" depends="clean" description="clean db and create tables" >
+		<sql userid="${db.username}" password="${db.password}" driver="${db.driver}" url="${db.url}" delimiter=";/" delimitertype="row" >
+			<classpath refid="classpath" />
+			<transaction  src="SDB_DEMO_ddl.sql" />
+		</sql>
+	</target>
+
+</project>
