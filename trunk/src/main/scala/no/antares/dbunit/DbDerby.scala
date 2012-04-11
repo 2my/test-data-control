@@ -18,8 +18,7 @@ package no.antares.dbunit
 import org.slf4j.{LoggerFactory, Logger}
 import org.apache.derby.tools.ij
 import org.dbunit.database.DatabaseConfig
-import no.antares.util.Encoded
-import java.io.{ByteArrayInputStream, OutputStream, InputStream}
+import java.io.ByteArrayInputStream
 
 /** Really for testing, but nice to have here for reference
  * @author tommy skodje

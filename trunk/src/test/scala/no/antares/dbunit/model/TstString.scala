@@ -23,6 +23,8 @@ case class TstString(
 }
 
 object TstString {
+  val sqlSelectAll	= "SELECT * FROM TST_STRINGS"
+  def sqlSelectMatching( matsj: String )	= sqlSelectAll + " WHERE COL_WITH_STRING = 'X'".replaceAll( "X", matsj )
   def sqlDropScript	= "drop table tst_strings"
 	def sqlCreateScript	= """create table tst_strings (
 	COL_WITH_STRING varchar(255) PRIMARY KEY
@@ -65,13 +67,14 @@ object TstString {
 </dataset>"""
 ;
 
+  val testValue1  = "1 ÆØÅ +sdlkf"
   def jsonTestData	= """{
 	"dataset": {
 		"tstStrings": [
-			{ "colWithString": "1 ÆØÅ +sdlkf"  }
+			{ "colWithString": "Value1"  }
 		]
 	}
-}"""
+}""".replaceAll( "Value1", testValue1 )
 ;
 
 }

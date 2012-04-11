@@ -15,9 +15,7 @@
 */
 package no.antares.dbunit
 
-import collection.mutable.ListBuffer
-import org.dbunit.database.{DatabaseConfig, IDatabaseConnection}
-import java.sql.Connection
+import org.dbunit.database.IDatabaseConnection
 
 /** Abstract superclass for interfacing different databases.
  * @author tommy skodje
