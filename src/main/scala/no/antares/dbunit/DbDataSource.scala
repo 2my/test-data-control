@@ -24,10 +24,11 @@ import javax.sql.DataSource
  * @author tommy skodje
 */
 class DbDataSource(
-//  val ds: DataSource, // FixMe: should not have to provide line below
   val driver: String, val dbUrl: String, val username: String, val password: String,
   val schema: String
 ) extends Db {
+
+  def this( driver: String, dbUrl: String, username: String, password: String )  = this( driver, dbUrl, username, password, "" );
 
   val ds  = DbDataSource.getDataSource( driver, dbUrl, username, password );
 

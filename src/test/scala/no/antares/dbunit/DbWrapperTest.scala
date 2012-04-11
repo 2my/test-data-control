@@ -24,7 +24,6 @@ import collection.mutable.ListBuffer
 import no.antares.dbunit.model._
 import java.text.SimpleDateFormat
 import xml.{Node, Elem, XML}
-import org.junit.{After, Test}
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
@@ -32,6 +31,9 @@ import org.slf4j.{LoggerFactory, Logger}
 import java.util.{ArrayList, Date}
 import no.antares.util.FileUtil
 import converters._
+import org.junit.{Before, After, Test}
+import org.scalatest.Assertions._
+import no.antares.xstream.XStreamUtils
 
 /**
  * @author Tommy Skodje
@@ -43,58 +45,61 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 
   val db  = new DbWrapper( dbp );
 
-  @After def cleanUp  = dbp.rollback()
-
-  @Test def testJsonToDB_simple() {
+  @Before def setUp(): Unit  = {
     dbp.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
+    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+  }
+
+  @After def cleanUp(): Unit  = dbp.rollback()
+
+  @Test def refreshWithFlatJSON_simple() {
     val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
+
     db.refreshWithFlatJSON( jsonSet )
 
-    val json	= new JSONObject( TstString.jsonTestData )
-    val expected  = json.getJSONObject( "dataset" ).getJSONArray("tstStrings" ).getJSONObject( 0 ) .getString( "colWithString" );
-    logger.info( expected )
+    val result = ( db.extractFlatXml( ("dummy", TstString.sqlSelectAll ) )  \\ "@COL_WITH_STRING" text )
+		assert( TstString.testValue1 === result )
+  }
 
-    val result = db.extractFlatXml( ("tstStrings", "SELECT * FROM TST_STRINGS") )
-		assert( expected  === (result \\ "@COL_WITH_STRING" text) )
+  @Test def deleteMatchingFlatJSON() {
+    refreshWithFlatJSON_simple()
+    val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
+
+    db.deleteMatchingFlatJSON( jsonSet )
+
+    val result = ( db.extractFlatXml( ("dummy", TstString.sqlSelectAll ) )  \\ "@COL_WITH_STRING" text )
+		assert( result.isEmpty )
 	}
 
-  @Test def testJsonToDB_file() {
-    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+  @Test def refreshWithFlatJSON_file() {
     val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ), new ConditionalCamelNameConverter() )
+
     db.refreshWithFlatJSON( jsonSet )
 
-    val expectedXml = XML.loadString(Credential.flatXmlTestData)
-
-    val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
-
-		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
-		logger.info( partialResult \\ "@PASS_WORD" text )
+    val result = ( db.extractFlatXml( ("dummy", Credential.sqlSelectAll) )  \\ "@USER_NAME" text)
+		assert( Credential.userNameFromFile === result )
 	}
 
-  @Test def verify_extractFlatXml() {
-    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+  @Test def extractFlatXml() {
     db.refreshWithFlatXml( Credential.flatXmlTestData )
-    val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
-    val partialResult = db.extractFlatXml( ("credentialz", "SELECT * FROM credentialz") )
+    val partialResult = ( db.extractFlatXml( ("dummy", Credential.sqlSelectAll) )  \\ "@USER_NAME" text)
 
-		assert( (expectedXml \\ "@USER_NAME" text)  === (partialResult \\ "@USER_NAME" text) )
-		logger.info( partialResult \\ "@PASS_WORD" text )
+		assert( Credential.userNameFromXml  === partialResult )
   }
 
-  @Test def verify_extractFlatJson() {
-    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+  @Test def extractFlatJson() {
     db.refreshWithFlatXml( Credential.flatXmlTestData )
-    val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
-    val partialResult = db.extractFlatJson( ("credentialz", "SELECT * FROM credentialz") )
+    val json = db.extractFlatJson( ("credentialz", Credential.sqlSelectAll) )
 
-		logger.info( partialResult.toString )
+		val result  = Credential.from( json.getJSONObject( "credentialz" ) );
+    assert( Credential.userNameFromXml  === result.user )
   }
 
-  @Test def verify_stream2FlatXml() {
-    // if ( "oracle.jdbc.OracleDriver" == db.db.driver ) return; // TODO: too much data in test database
-    dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+  // @Test  // TODO: too much data in test database
+  def stream2FlatXml() {
+    // if ( "oracle.jdbc.OracleDriver" == db.db.driver ) return;
     db.refreshWithFlatXml( Credential.flatXmlTestData )
     val expectedXml = XML.loadString(Credential.flatXmlTestData)
 
@@ -104,31 +109,31 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 		logger.info( fullResult \\ "@NAME" text )
   }
 
-  def xmlElements( nodes: Node, elementName: String ): List[Elem] = {
-    val buf = new ListBuffer[Elem]
-    ( nodes \\ elementName ).foreach( node => buf.append( node.asInstanceOf[Elem] ) )
-    buf.toList
-  }
+  private def parseTstString( row: Elem ): TstString = new TstString( (row \\ "@COL_WITH_STRING" ).text )
 
-  def parseTstString( row: Elem ): TstString = new TstString( (row \\ "@COL_WITH_STRING" ).text )
-
-  def parseTstNumerical( row: Elem ): TstNumerical = {
+  private def parseTstNumerical( row: Elem ): TstNumerical = {
     val i = (row \\ "@COL_WITH_INT" ).text
     val f = ( row \\ "@COL_WITH_FLOAT" ).text
     val d = ( row \\ "@COL_WITH_DATE" ).text
     new TstNumerical( toInt( i ), toFloat( f ), toDate( d ) );
   }
 
-  def parseTstNumerical( jsonO: JSONObject ): TstNumerical = {
+  private def parseTstNumerical( jsonO: JSONObject ): TstNumerical = {
     val date  = new Date()	// jsonO.getString( "colWithDate" )
     val fpnum	= jsonO.getDouble( "colWithFloat" ).asInstanceOf[Float]
     new TstNumerical( jsonO.getInt( "colWithInt" ), fpnum, date );
   }
 
-  val dateparser  = new SimpleDateFormat("yyyy-MM-dd")
-  def toDate( value: String ): Date = if ( value.isEmpty ) null else dateparser.parse("2008-05-06 13:29")
-  def toInt( value: String ): java.lang.Integer = if ( value.isEmpty ) null else value.toInt
-  def toFloat( value: String ): java.lang.Float = if ( value.isEmpty ) null else value.toFloat
+  private def xmlElements( nodes: Node, elementName: String ): List[Elem] = {
+    val buf = new ListBuffer[Elem]
+    ( nodes \\ elementName ).foreach( node => buf.append( node.asInstanceOf[Elem] ) )
+    buf.toList
+  }
+
+  private val dateparser  = new SimpleDateFormat("yyyy-MM-dd")
+  private def toDate( value: String ): Date = if ( value.isEmpty ) null else dateparser.parse("2008-05-06 13:29")
+  private def toInt( value: String ): java.lang.Integer = if ( value.isEmpty ) null else value.toInt
+  private def toFloat( value: String ): java.lang.Float = if ( value.isEmpty ) null else value.toFloat
 
 }
 

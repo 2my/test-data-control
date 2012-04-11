@@ -17,7 +17,9 @@ package no.antares.dbunit.model
 
 import java.util.Date;
 
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.LogFactory
+import org.codehaus.jettison.json.JSONObject
+;
 
 /** Slightly complex model class */
 @serializable
@@ -59,6 +61,7 @@ case class Credential {
 }
 
 object Credential {
+  def sqlSelectAll	= "SELECT * FROM credentialz"
   def sqlDropScript	= "drop table credentialz;"
 	def sqlCreateScript	= """create table credentialz (
 	user_name varchar (30) PRIMARY KEY, 
@@ -77,10 +80,13 @@ object Credential {
 );
 """;
 
+  val userNameFromFile = "TestUser1"
+  val userNameFromXml = "TestUser2"
+
   def flatXmlTestData	= """<?xml version='1.0' encoding='UTF-8'?>
 <dataset>
   <CREDENTIALZ
-   USER_NAME="TestUser1"
+   USER_NAME="TestUser2"
    PASS_WORD="TestPwd1"
    NAME="Test User One"
    COMP_NO="1"
@@ -109,5 +115,11 @@ object Credential {
 		}
   }"""
 ;
+
+  def from( jsonO: JSONObject ): Credential = {
+    val user  = new Credential
+    user.user = jsonO.getString( "@USER_NAME" )
+    user
+  }
 
 }

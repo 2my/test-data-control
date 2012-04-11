@@ -24,7 +24,6 @@ import xml.{XML, Node}
 import org.dbunit.database.{ForwardOnlyResultSetTableFactory, DatabaseConfig, QueryDataSet}
 import org.dbunit.util.fileloader.FlatXmlDataFileLoader
 import java.io._
-import org.apache.commons.io.IOUtils
 import org.dbunit.dataset.stream.DataSetProducerAdapter
 import org.codehaus.jettison.json.JSONObject
 
