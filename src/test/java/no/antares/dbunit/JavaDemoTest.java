@@ -22,6 +22,7 @@ import no.antares.dbunit.model.TstString;
 import no.antares.xstream.XStreamUtils;
 
 import org.codehaus.jettison.json.JSONObject;
+import org.junit.Test;
 
 /** Mostly for demonstration purpose
  * @author tommyskodje
