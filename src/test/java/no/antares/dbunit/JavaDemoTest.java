@@ -15,14 +15,20 @@
 */
 package no.antares.dbunit;
 
-import static org.junit.Assert.*;
-
 import no.antares.dbunit.converters.CamelNameConverter;
 import no.antares.dbunit.model.TstString;
 import no.antares.xstream.XStreamUtils;
-
 import org.codehaus.jettison.json.JSONObject;
+import org.dbunit.dataset.Column;
+import org.dbunit.dataset.filter.IColumnFilter;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.Assert.*;
 
 /** Mostly for demonstration purpose
  * @author tommyskodje
@@ -52,12 +58,17 @@ public class JavaDemoTest {
         System.out.println(fullResult.toString(2));
         assertEquals( TstString.testValue1(), fullResult.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
 
+
         // delete
+        ColumnFilter filter   = new ColumnFilter();
+        filter.addTableJ( "TST_STRINGS", new String[] {"COL_WITH_STRING"} );
+        wrapper.addUnitProperty( "http://www.dbunit.org/properties/primaryKeyFilter", filter );
         wrapper.deleteMatchingFlatJSON( jsonSet );
         // export
         emptyResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
         System.out.println( emptyResult.toString(2) );
         assertNull( emptyResult.optJSONObject( "tst_strings" ) );
+
     }
 
     /** XStream to and fro json */

@@ -37,6 +37,11 @@ class DbWrapper( val db: Db ) {
   val dbUnitConnection = db.getDbUnitConnection();
 
   /**  */
+  def addUnitProperty( name: String, value: Object ): Unit = {
+    dbUnitConnection.getConfig().setProperty( name, value );
+  }
+
+  /**  */
   def refreshWithFlatJSON( json: JsonDataSet ): Unit = {
     val producer  = new FlatJsonDataSetProducer( json )
     val dataSet = new CachedDataSet( producer )
