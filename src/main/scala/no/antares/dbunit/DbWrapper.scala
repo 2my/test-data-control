@@ -34,18 +34,20 @@ class DbWrapper( val db: Db ) {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapper] )
 
+  val dbUnitConnection = db.getDbUnitConnection();
+
   /**  */
   def refreshWithFlatJSON( json: JsonDataSet ): Unit = {
     val producer  = new FlatJsonDataSetProducer( json )
     val dataSet = new CachedDataSet( producer )
-    DatabaseOperation.REFRESH.execute( getDbUnitConnection(), dataSet );
+    DatabaseOperation.REFRESH.execute( dbUnitConnection, dataSet );
   }
 
   /**  */
   def deleteMatchingFlatJSON( json: JsonDataSet ): Unit = {
     val producer  = new FlatJsonDataSetProducer( json )
     val dataSet = new CachedDataSet( producer )
-    DatabaseOperation.DELETE.execute( getDbUnitConnection(), dataSet );
+    DatabaseOperation.DELETE.execute( dbUnitConnection, dataSet );
   }
 
   /**  */
@@ -54,7 +56,7 @@ class DbWrapper( val db: Db ) {
     val is = new StringReader( xml );
     val dataSet = builder.build(new InputSource(is));
 
-    DatabaseOperation.REFRESH.execute(getDbUnitConnection(), dataSet);
+    DatabaseOperation.REFRESH.execute( dbUnitConnection, dataSet);
   }
 
   private def refreshWithFlatXmlFile( dbUnitFlatXmlFile: String ) {
@@ -63,7 +65,7 @@ class DbWrapper( val db: Db ) {
 		// IDataSet dataSet = new StreamingDataSet(producer);
 		val dataSet = ( new FlatXmlDataFileLoader() ).load( dbUnitFlatXmlFile );
 
-		DatabaseOperation.REFRESH.execute( getDbUnitConnection(), dataSet );
+		DatabaseOperation.REFRESH.execute( dbUnitConnection, dataSet );
   }
 
   def extractFlatXml( tablesWithQueries: (String,String)* ): Node = {
@@ -91,7 +93,7 @@ class DbWrapper( val db: Db ) {
 
   /**  */
   private def dataSetFor( tablesWithQueries: Iterable[(String, String)] ): QueryDataSet = {
-    val partialDataSet = new QueryDataSet(getDbUnitConnection());
+    val partialDataSet = new QueryDataSet(dbUnitConnection);
     tablesWithQueries.foreach( e => partialDataSet.addTable( e._1, e._2) )
     // for ((name, select) <- tablesWithQueries) partialDataSet.addTable(name, select);
     partialDataSet
@@ -99,7 +101,7 @@ class DbWrapper( val db: Db ) {
 
   /** full database export - setup for streaming @see http://www.dbunit.org/faq.html#streaming */
   def stream2FlatXml(): Node = {
-    val dbuConnection = getDbUnitConnection();
+    val dbuConnection = dbUnitConnection;
     val config = dbuConnection.getConfig();
 		config.setProperty( DatabaseConfig.PROPERTY_RESULTSET_TABLE_FACTORY, new ForwardOnlyResultSetTableFactory() );
 		val fullDataSet = dbuConnection.createDataSet();
@@ -107,7 +109,5 @@ class DbWrapper( val db: Db ) {
 		FlatXmlDataSet.write(fullDataSet, fullResultW );
 		XML.loadString( fullResultW.toString )
   }
-
-  private def getDbUnitConnection() = db.getDbUnitConnection();
 
 }
