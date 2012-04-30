@@ -32,8 +32,6 @@ class DbDataSource(
 
   val ds  = DbDataSource.getDataSource( driver, dbUrl, username, password );
 
-  protected val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
-
   override def rollback(): Unit = ds.getConnection().rollback();
 
   override def getDbUnitConnection(): IDatabaseConnection = {

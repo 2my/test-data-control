@@ -16,14 +16,20 @@
 package no.antares.dbunit
 
 import org.dbunit.database.IDatabaseConnection
+import collection.mutable.ListBuffer
 
 /** Abstract superclass for interfacing different databases.
  * @author tommy skodje
 */
 abstract class Db {
 
+  val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
+
   /** @return database connection wrapper for dbUnit, implementor must override */
   def getDbUnitConnection(): IDatabaseConnection;
+
+  /**  */
+  def addDbUnitProperty( name: String, value : Object ): Unit = dbUnitProperties.append( (name, value) );
 
   /** For easy access from java */
   def runSqlScripts( scripts: Array[String]) : Array[Boolean] = runSqlScripts(scripts.toSeq : _*).toArray;

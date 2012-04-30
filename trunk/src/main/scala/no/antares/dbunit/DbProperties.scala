@@ -44,8 +44,6 @@ class DbProperties(
   protected val dbConnection: Connection	= DriverManager.getConnection( dbUrl, connectionProperties );
 
 
-  protected val dbUnitProperties  = new ListBuffer[ Tuple2[String, Object] ]();
-
 
   override def runSqlScript( script: String ): Boolean = {
     val runner = new ScriptRunner( driver, dbUrl, username, password );
