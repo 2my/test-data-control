@@ -43,6 +43,8 @@ class JsonDataSet(
     this( scala.io.Source.fromFile( jsonF ).mkString, nameConverter )
   }
 
+  def wrap()  = new JsonDataSet( """{"dataSet": ORIG}""".replace( "ORIG", jsonS ), nameConverter );
+
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
   val json	= new JSONObject( jsonS )
