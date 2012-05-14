@@ -22,7 +22,7 @@ import org.dbunit.dataset.filter.IColumnFilter
 
 /**  */
 class ColumnFilter extends IColumnFilter {
-  private final val pks = new HashMap[String, Set[String]]
+  private val pks = new HashMap[String, Set[String]]
 
   def addTableJ( name: String, colNames: Array[String]) = addTable( name, colNames.toSeq: _* );
   def addTable( name: String, colNames: String*): Unit = {
