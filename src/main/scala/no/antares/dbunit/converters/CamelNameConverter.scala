@@ -15,12 +15,15 @@ package no.antares.dbunit.converters
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-/** @author tommyskodje */
+/** A name converter that converts camelCased to UPPERCASED_UNDERSCORED
+ @author Tommy Skodje
+*/
+class CamelNameConverter( private val nextInChain: DefaultNameConverter ) extends DefaultNameConverter() {
 
-class CamelNameConverter() extends DefaultNameConverter() {
+  def this() = this( new DefaultNameConverter() );
 
-  override def tableName( oldName: String ): String  = camel2underscored( oldName );
-  override def columnName( oldName: String ): String  = camel2underscored( oldName );
+  override def tableName( oldName: String ): String  = nextInChain.tableName( camel2underscored( oldName ) );
+  override def columnName( oldName: String ): String  = nextInChain.tableName( camel2underscored( oldName ) );
 
   private def camel2underscored( name: String ): String = {
     val underscored = new StringBuilder()

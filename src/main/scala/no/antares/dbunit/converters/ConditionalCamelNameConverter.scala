@@ -16,7 +16,9 @@ package no.antares.dbunit.converters
    limitations under the License.
 */
 /** @author Tommy Skodje */
-class ConditionalCamelNameConverter() extends CamelNameConverter() {
+class ConditionalCamelNameConverter( private val nextInChain: DefaultNameConverter ) extends CamelNameConverter( nextInChain ) {
+
+  def this() = this( new DefaultNameConverter() );
 
   override def tableName( oldName: String ): String  = {
     if ( isCamelCased( oldName ) )
