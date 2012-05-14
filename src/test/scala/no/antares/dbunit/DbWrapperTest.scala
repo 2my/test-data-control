@@ -42,6 +42,7 @@ import no.antares.xstream.XStreamUtils
 class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 
   private final val logger: Logger = LoggerFactory.getLogger( classOf[DbWrapperTest] )
+  val tstStr  = "1 ÆØÅ +sdlkf"
 
   val db  = new DbWrapper( dbp );
 
@@ -53,17 +54,17 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
   @After def cleanUp(): Unit  = dbp.rollback()
 
   @Test def refreshWithFlatJSON_simple() {
-    val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
+    val jsonSet	= new JsonDataSet( TstString.jsonTestData( tstStr ), new CamelNameConverter() )
 
     db.refreshWithFlatJSON( jsonSet )
 
     val result = ( db.extractFlatXml( ("dummy", TstString.sqlSelectAll ) )  \\ "@COL_WITH_STRING" text )
-		assert( TstString.testValue1 === result )
+		assert( tstStr === result )
   }
 
   @Test def deleteMatchingFlatJSON() {
     refreshWithFlatJSON_simple()
-    val jsonSet	= new JsonDataSet( TstString.jsonTestData, new CamelNameConverter() )
+    val jsonSet	= new JsonDataSet( TstString.jsonTestData( tstStr ), new CamelNameConverter() )
 
     db.deleteMatchingFlatJSON( jsonSet )
 

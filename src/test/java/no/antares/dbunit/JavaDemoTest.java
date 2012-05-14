@@ -15,18 +15,13 @@
 */
 package no.antares.dbunit;
 
+import no.antares.dbunit.converters.AlphaRemover;
 import no.antares.dbunit.converters.CamelNameConverter;
+import no.antares.dbunit.converters.ConditionalCamelNameConverter;
 import no.antares.dbunit.model.TstString;
 import no.antares.xstream.XStreamUtils;
 import org.codehaus.jettison.json.JSONObject;
-import org.dbunit.dataset.Column;
-import org.dbunit.dataset.filter.IColumnFilter;
 import org.junit.Test;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -45,30 +40,35 @@ public class JavaDemoTest {
         // clean db
         String[] scripts    = { TstString.sqlDropScript(), TstString.sqlCreateScript() };
         db.runSqlScripts( scripts );
-        // export
+        // export and verify empty
         JSONObject emptyResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
         System.out.println( emptyResult.toString(2) );
         assertNull( emptyResult.optJSONObject( "tst_strings" ) );
 
         // refresh
-        JsonDataSet jsonSet	= new JsonDataSet( TstString.jsonTestData(), new CamelNameConverter() );
+        String val1 = "1 ÆØÅ +sdlkf";
+        JsonDataSet jsonSet	= new JsonDataSet( TstString.jsonTestData( val1 ), new CamelNameConverter() );
         wrapper.refreshWithFlatJSON( jsonSet );
         // export
-        JSONObject fullResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
-        System.out.println(fullResult.toString(2));
-        assertEquals( TstString.testValue1(), fullResult.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
-
+        JSONObject resultWithAlpha = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        // System.out.println(resultWithAlpha.toString(2));
+        assertEquals( val1, resultWithAlpha.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
 
         // delete
         ColumnFilter filter   = new ColumnFilter();
         filter.addTableJ( "TST_STRINGS", new String[] {"COL_WITH_STRING"} );
         wrapper.addUnitProperty( "http://www.dbunit.org/properties/primaryKeyFilter", filter );
-        wrapper.deleteMatchingFlatJSON( jsonSet );
+        wrapper.deleteMatchingFlatJSON(jsonSet);
         // export
         emptyResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
         System.out.println( emptyResult.toString(2) );
         assertNull( emptyResult.optJSONObject( "tst_strings" ) );
 
+        // refresh with wrapping and chained converters (does nothing useful here, because data underscored)
+        jsonSet	= new JsonDataSet( resultWithAlpha.toString(), new AlphaRemover( new ConditionalCamelNameConverter() ) );
+        wrapper.refreshWithFlatJSON( jsonSet.wrap() );
+        resultWithAlpha = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        assertEquals( val1, resultWithAlpha.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
     }
 
     /** XStream to and fro json */

@@ -35,8 +35,8 @@ class XmlStreamerTest extends AssertionsForJUnit {
   private final val logger: Logger = LoggerFactory.getLogger( classOf[XmlStreamerTest] )
 
   @Test def testJson2Xml() {
-    logger.info( TstString.jsonTestData );
-    val tstJson	= new JSONObject( TstString.jsonTestData )
+    val tstStr  = "1 ÆØÅ +sdlkf"
+    val tstJson	= new JSONObject( TstString.jsonTestData( tstStr ) )
 
     val reader = new MappedXMLStreamReader( tstJson )
     val resultW	= new StringWriter();
@@ -45,7 +45,7 @@ class XmlStreamerTest extends AssertionsForJUnit {
 
     logger.info( resultW.toString )
     val resultXml	= XML.loadString( resultW.toString )
-    assert( "1 ÆØÅ +sdlkf"  == (resultXml \\ "colWithString" text) )
+    assert( tstStr  == (resultXml \\ "colWithString" text) )
 	}
 
 }

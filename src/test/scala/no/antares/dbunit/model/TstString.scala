@@ -67,14 +67,12 @@ object TstString {
 </dataset>"""
 ;
 
-  val testValue1  = "1 ÆØÅ +sdlkf"
-  def jsonTestData	= """{
-	"dataset": {
-		"tstStrings": [
-			{ "colWithString": "Value1"  }
-		]
-	}
-}""".replaceAll( "Value1", testValue1 )
-;
+  def unWrappedJsonTestData( value: String )	= """{
+    "tstStrings": [
+      { "colWithString": "Value1"  }
+    ]
+  }""".replaceAll( "Value1", value )
+
+  def jsonTestData( value: String )	= """{ "dataset": Object1 }""".replaceAll( "Object1", unWrappedJsonTestData( value ) );
 
 }
