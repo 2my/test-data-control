@@ -15,21 +15,22 @@
 */
 package no.antares.dbunit
 
+import java.io.File
+import java.lang.RuntimeException
 import java.util.ArrayList
 
-import org.dbunit.dataset.datatype.DataType
-import org.slf4j.{LoggerFactory, Logger}
-import org.dbunit.dataset._
-import org.codehaus.jettison.json.{JSONObject, JSONArray}
-
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
 import scala.collection._
-import java.io.File
-import mutable.ListBuffer
+
+import org.codehaus.jettison.json.JSONArray
+import org.codehaus.jettison.json.JSONObject
+import org.dbunit.dataset.datatype.DataType
+import org.dbunit.dataset._
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import converters.DefaultNameConverter
-import java.lang.RuntimeException
-import java.security.Key
 
 
 /** @author Tommy Skodje */
@@ -44,6 +45,8 @@ class JsonDataSet(
   }
 
   def wrap()  = new JsonDataSet( """{"dataSet": ORIG}""".replace( "ORIG", jsonS ), nameConverter );
+
+  def toIDataSet = new CachedDataSet( new FlatJsonDataSetProducer( this ) );
 
   private final val logger: Logger = LoggerFactory.getLogger(classOf[JsonDataSet])
 
