@@ -41,7 +41,7 @@ public class JavaDemoTest {
         String[] scripts    = { TstString.sqlDropScript(), TstString.sqlCreateScript() };
         db.runSqlScripts( scripts );
         // export and verify empty
-        JSONObject emptyResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        JSONObject emptyResult = new JSONObject( wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() ) );
         System.out.println( emptyResult.toString(2) );
         assertNull( emptyResult.optJSONObject( "tst_strings" ) );
 
@@ -50,7 +50,7 @@ public class JavaDemoTest {
         JsonDataSet jsonSet	= new JsonDataSet( TstString.jsonTestData( val1 ), new CamelNameConverter() );
         wrapper.refreshWithFlatJSON( jsonSet );
         // export
-        JSONObject resultWithAlpha = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        JSONObject resultWithAlpha = new JSONObject( wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() ) );
         // System.out.println(resultWithAlpha.toString(2));
         assertEquals( val1, resultWithAlpha.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
 
@@ -60,14 +60,14 @@ public class JavaDemoTest {
         wrapper.addUnitProperty( "http://www.dbunit.org/properties/primaryKeyFilter", filter );
         wrapper.deleteMatchingFlatJSON(jsonSet);
         // export
-        emptyResult = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        emptyResult = new JSONObject( wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() ) );
         System.out.println( emptyResult.toString(2) );
         assertNull( emptyResult.optJSONObject( "tst_strings" ) );
 
         // refresh with wrapping and chained converters (does nothing useful here, because data underscored)
         jsonSet	= new JsonDataSet( resultWithAlpha.toString(), new AlphaRemover( new ConditionalCamelNameConverter() ) );
         wrapper.refreshWithFlatJSON( jsonSet.wrap() );
-        resultWithAlpha = wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() );
+        resultWithAlpha = new JSONObject( wrapper.extractFlatJson( "tst_strings", TstString.sqlSelectAll() ) );
         assertEquals( val1, resultWithAlpha.getJSONObject("tst_strings" ).getString( "@COL_WITH_STRING" ) );
     }
 
