@@ -7,14 +7,13 @@ import org.codehaus.jettison.AbstractXMLStreamWriter
 import org.codehaus.jettison.mapped.{MappedNamespaceConvention, MappedXMLStreamWriter}
 import java.io.StringWriter
 
-/** @author tommyskodje */
-
 /** Produces a dbUnit dataset from json, mirrors dbUnit FlatXmlProducer.
 
 I chose to reimplement most of FlatXmlProducer here
 I could have extended only produce() method in FlatXmlProducer, and use jettison XmlStreamReader
 org.springframework.util.xml.StaxStreamXMLReader converts from XmlStreamReader to XmlReader
 
+ @author tommy skodje
 */
 class FlatJsonDataSetConsumer( val strWriter: StringWriter )
 extends IDataSetConsumer
@@ -37,7 +36,9 @@ extends IDataSetConsumer
   }
 
   private def column( key: String, value: AnyRef ) {
-  	w.writeAttribute( key, toString( value ) );
+    val valS  = toString( value )
+    if ( valS != null )
+    	w.writeAttribute( key, valS );
     /*
     w.writeStartElement( key )
     if ( value != null )
