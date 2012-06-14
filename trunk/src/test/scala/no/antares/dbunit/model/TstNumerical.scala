@@ -33,6 +33,8 @@ object TstNumerical {
     COL_WITH_DATE date
   );
   """;
+  def sqlSelectAll	= "SELECT * FROM tst_numericals"
+  def sqlSelectWhereInt( value: java.lang.Integer )	= "SELECT * FROM tst_numericals WHERE COL_WITH_INT=" + value;
 
 	def oldDbUnitXmlTestData	= """<?xml version='1.0' encoding='UTF-8'?>
   <dataset>
@@ -64,14 +66,14 @@ object TstNumerical {
   def jsonTestData	= """{
 	"dataset": {
 		"tstNumericals": [
-        { "colWithInt": 456 },
+        { "colWithInt": 123 },
         { "colWithFloat": 3.141592658,
-          "colWithInt": 789
+          "colWithInt": 234
         },
         { "colWithDate": "2004-09-30",
           "colWithInt": -3
         },
-        { "colWithInt": 123,
+        { "colWithInt": 456,
           "colWithFloat": -2,
           "colWithDate": "2114-12-24"
         }

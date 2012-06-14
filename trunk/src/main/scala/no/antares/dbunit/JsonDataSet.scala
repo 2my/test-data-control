@@ -31,6 +31,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import converters.DefaultNameConverter
+// import org.json.JSONObject
 
 
 /** @author Tommy Skodje */
@@ -40,9 +41,6 @@ class JsonDataSet(
 ) {
 
   def this( jsonS: String )  = this( jsonS, new DefaultNameConverter() );
-  def this( jsonF: File, nameConverter: DefaultNameConverter  = new DefaultNameConverter() )  = {
-    this( scala.io.Source.fromFile( jsonF ).mkString, nameConverter )
-  }
 
   def wrap()  = new JsonDataSet( """{"dataSet": ORIG}""".replace( "ORIG", jsonS ), nameConverter );
 
@@ -54,7 +52,9 @@ class JsonDataSet(
 
   lazy val tables  = parseTables( json )
 
-  def toString(indentFactor: Int): String = json.toString( indentFactor )
+  override def toString(): String = jsonS;
+  def toString(indentFactor: Int): String = json.toString( indentFactor );
+
 
   private def parseTables( json: JSONObject ): List[ TableInDataSet ] = {
     val dataSets = parseDataSets( json )

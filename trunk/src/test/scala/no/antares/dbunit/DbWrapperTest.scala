@@ -17,8 +17,6 @@ package no.antares.dbunit
 
 import java.lang.Float
 import org.scalatest.junit.AssertionsForJUnit
-import org.codehaus.jettison.json.JSONObject
-
 import collection.mutable.ListBuffer
 
 import no.antares.dbunit.model._
@@ -34,6 +32,7 @@ import converters._
 import org.junit.{Before, After, Test}
 import org.scalatest.Assertions._
 import no.antares.xstream.XStreamUtils
+import org.codehaus.jettison.json.JSONObject
 
 /**
  * @author Tommy Skodje
@@ -49,9 +48,34 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
   @Before def setUp(): Unit  = {
     dbp.runSqlScripts( TstString.sqlDropScript, TstString.sqlCreateScript );
     dbp.runSqlScripts( Credential.sqlDropScript, Credential.sqlCreateScript );
+    dbp.runSqlScripts( TstNumerical.sqlDropScript, TstNumerical.sqlCreateScript );
   }
 
   @After def cleanUp(): Unit  = dbp.rollback()
+
+  @Test def extractFlatJson() {
+    db.refreshWithFlatXml( Credential.flatXmlTestData )
+
+    val json = new JSONObject( db.extractFlatJson( ("credentialz", Credential.sqlSelectAll) ) )
+    println( json.toString( 2 ) )
+
+		val result  = Credential.from( json.getJSONObject( "credentialz" ) );
+    assert( Credential.userNameFromXml  === result.user )
+  }
+
+  @Test def roundtripJson() {
+    val jsonSet	= new JsonDataSet( TstNumerical.jsonTestData, new CamelNameConverter() )
+    db.refreshWithFlatJSON( jsonSet )
+
+    val tstStr = ( db.extractFlatXml( ("dummy", TstNumerical.sqlSelectWhereInt( 456 ) ) )  \\ "@COL_WITH_FLOAT" text )
+		assert( tstStr === "-2.0" )
+
+    val json = new JSONObject( db.extractFlatJson( ("numericals", TstNumerical.sqlSelectAll) ) )
+    println( json.toString( 2 ) )
+
+		val result  = parseTstNumerical( json.getJSONArray( "numericals" ).getJSONObject( 0 ) );
+    // println( result.colWithInt )
+  }
 
   @Test def refreshWithFlatJSON_simple() {
     val jsonSet	= new JsonDataSet( TstString.jsonTestData( tstStr ), new CamelNameConverter() )
@@ -72,30 +96,12 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 		assert( result.isEmpty )
 	}
 
-  @Test def refreshWithFlatJSON_file() {
-    val jsonSet	= new JsonDataSet( FileUtil.getFromClassPath( "credentialz.json" ), new ConditionalCamelNameConverter() )
-
-    db.refreshWithFlatJSON( jsonSet )
-
-    val result = ( db.extractFlatXml( ("dummy", Credential.sqlSelectAll) )  \\ "@USER_NAME" text)
-		assert( Credential.userNameFromFile === result )
-	}
-
   @Test def extractFlatXml() {
     db.refreshWithFlatXml( Credential.flatXmlTestData )
 
     val partialResult = ( db.extractFlatXml( ("dummy", Credential.sqlSelectAll) )  \\ "@USER_NAME" text)
 
 		assert( Credential.userNameFromXml  === partialResult )
-  }
-
-  @Test def extractFlatJson() {
-    db.refreshWithFlatXml( Credential.flatXmlTestData )
-
-    val json = db.extractFlatJson( ("credentialz", Credential.sqlSelectAll) )
-
-		val result  = Credential.from( json.getJSONObject( "credentialz" ) );
-    assert( Credential.userNameFromXml  === result.user )
   }
 
   // @Test  // TODO: too much data in test database
@@ -121,8 +127,8 @@ class DbWrapperTest( val dbp: DbProperties ) extends AssertionsForJUnit {
 
   private def parseTstNumerical( jsonO: JSONObject ): TstNumerical = {
     val date  = new Date()	// jsonO.getString( "colWithDate" )
-    val fpnum	= jsonO.getDouble( "colWithFloat" ).asInstanceOf[Float]
-    new TstNumerical( jsonO.getInt( "colWithInt" ), fpnum, date );
+    val fpnum	= jsonO.optDouble( "colWithFloat" ).floatValue()
+    new TstNumerical( jsonO.optInt( "colWithInt" ), fpnum, date );
   }
 
   private def xmlElements( nodes: Node, elementName: String ): List[Elem] = {

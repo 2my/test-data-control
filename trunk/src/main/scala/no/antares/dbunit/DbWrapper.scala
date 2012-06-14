@@ -41,6 +41,22 @@ class DbWrapper( val db: Db ) {
     dbUnitConnection.getConfig().setProperty( name, value );
   }
 
+  /** partial database export */
+  def extractFlatJson( table: String, query: String ): String = extractFlatJson( (table, query) );
+  def extractFlatJson( tablesWithQueries: Array[(String,String)] ): String = extractFlatJson(tablesWithQueries.toSeq : _*);
+  def extractFlatJson( tablesWithQueries: (String,String)* ): String = {
+    val partialDataSet: QueryDataSet = dataSetFor(tablesWithQueries)
+    val partialResultW: StringWriter = new StringWriter();
+
+    val strWriter = new StringWriter();
+    val consumer  = new FlatJsonDataSetConsumer( strWriter )
+    val provider: DataSetProducerAdapter = new DataSetProducerAdapter( partialDataSet )
+    provider.setConsumer( consumer )
+    provider.produce()
+
+    return strWriter.toString
+  }
+
   /**  */
   def refreshWithFlatJSON( json: JsonDataSet ): Unit = {
     val producer  = new FlatJsonDataSetProducer( json )
@@ -78,22 +94,6 @@ class DbWrapper( val db: Db ) {
     val partialResultW: StringWriter = new StringWriter();
     FlatXmlDataSet.write(partialDataSet, partialResultW);
     XML.loadString( partialResultW.toString )
-  }
-
-  /** partial database export */
-  def extractFlatJson( table: String, query: String ): JSONObject = extractFlatJson( (table, query) );
-  def extractFlatJson( tablesWithQueries: Array[(String,String)] ): JSONObject = extractFlatJson(tablesWithQueries.toSeq : _*);
-  def extractFlatJson( tablesWithQueries: (String,String)* ): JSONObject = {
-    val partialDataSet: QueryDataSet = dataSetFor(tablesWithQueries)
-    val partialResultW: StringWriter = new StringWriter();
-
-    val strWriter = new StringWriter();
-    val consumer  = new FlatJsonDataSetConsumer( strWriter )
-    val provider: DataSetProducerAdapter = new DataSetProducerAdapter( partialDataSet )
-    provider.setConsumer( consumer )
-    provider.produce()
-
-    new JSONObject( strWriter.toString )
   }
 
   /**  */
