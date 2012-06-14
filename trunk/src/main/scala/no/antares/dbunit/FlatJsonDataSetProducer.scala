@@ -15,21 +15,10 @@
 */
 package no.antares.dbunit
 
-import java.util.ArrayList
-
-import scala.collection.JavaConversions._
-import collection.mutable.ListBuffer
-
 import org.slf4j.{LoggerFactory, Logger}
 import org.dbunit.dataset._
 import stream.{BufferedConsumer, DefaultConsumer, IDataSetConsumer, IDataSetProducer}
-import org.dbunit.dataset.datatype.DataType
 import org.dbunit.dataset.xml._
-
-import org.codehaus.jettison.json.{JSONArray, JSONObject}
-
-import no.antares.util.NameValuePair
-
 
 /** Produces a dbUnit dataset from json, mirrors dbUnit FlatXmlProducer.
 
