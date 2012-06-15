@@ -29,12 +29,18 @@ import static org.junit.Assert.*;
  * @author tommyskodje
  */
 public class JavaDemoTest {
+	private final static DbDataSource dbDataSource	= new DbDataSource(
+			"org.apache.derby.jdbc.EmbeddedDriver",
+			"jdbc:derby:derbyDB;create=true",
+			"TEST",
+			"TEST",
+			"TEST"
+		);
 
     /** Full roundtrip: run db scripts, export, refresh and delete again */
     @Test public void testDbWrapper() throws Exception {
-        // DbProperties props	= new DbProperties( "org.apache.derby.jdbc.EmbeddedDriver", "jdbc:derby:derbyDB;create=true", "TEST", "TEST", "TEST" );
-        // DbWrapper db	= new DbWrapper( props );
         Db db	= new DbDerby();
+        // Db db	= dbDataSource;
         DbWrapper wrapper	= new DbWrapper( db );
 
         // clean db
