@@ -56,7 +56,7 @@ extends IDataSetConsumer
     w.writeEndDocument()
     w.close();
     strWriter.close();
-    System.out.println(strWriter.toString());
+    // System.out.println(strWriter.toString());
   }
 
   def startDataSet() { w.writeStartDocument() }
