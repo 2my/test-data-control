@@ -39,6 +39,12 @@
         <url>http://code.google.com/p/test-data-control/issues/list</url>
     </issueManagement>
 
+	<distributionManagement>    <!-- see http://blog.fastconnect.fr/?p=275 -->
+		<repository>
+			<id>google-tsk-antares-release</id>
+			<url>dav:https://test-data-control.googlecode.com/svn/maven2/releases</url>
+		</repository>
+	</distributionManagement>
 
 	<developers>
 		<developer>
