@@ -30,7 +30,7 @@ class DbDataSource(
 
   def this( driver: String, dbUrl: String, username: String, password: String )  = this( driver, dbUrl, username, password, "" );
 
-  val ds  = DbDataSource.getDataSource( driver, dbUrl, username, password );
+  val ds  = getDataSource( driver, dbUrl, username, password );
 
   override def rollback(): Unit = ds.getConnection().rollback();
 
@@ -50,16 +50,13 @@ class DbDataSource(
     doInTransaction { () => dbs.executeSql( script ) }
    }
 
-}
-
-object DbDataSource {
-  val instance = new DriverManagerDataSource();
-
-  def getDataSource( driverClass: String, dbUrl: String, username: String, password: String ): DataSource = {
+  private def getDataSource( driverClass: String, dbUrl: String, username: String, password: String ): DataSource = {
+	  val instance = new DriverManagerDataSource();
     instance.setDriverClassName( driverClass );
     instance.setUrl( dbUrl );
     instance.setUsername( username );
     instance.setPassword( password );
     return instance;
   }
+
 }
